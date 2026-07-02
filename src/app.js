@@ -1,9 +1,11 @@
+// 必须是整个项目的第一行代码！
+require('module-alias/register')
 // // 引入express
 const express = require('express')
 // 创建实例
 const app = express()
 // 引入汇聚后的总路由
-const routes = require('./routes')
+const routes = require('@/routes')
 
 const port = 3000
 

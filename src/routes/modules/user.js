@@ -4,7 +4,7 @@ const router = express.Router()
 
 // 获取用户列表
 router.get('/get', (req, res) => {
-  res.json({ message: '获取所有用户2', data: [] })
+  res.json({ message: '获取所有用户', data: [] })
 })
 
 // 获取单个用户
