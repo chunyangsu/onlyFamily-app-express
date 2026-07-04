@@ -3,8 +3,8 @@ const express = require('express')
 const router = express.Router()
 
 // 获取用户列表
-router.get('/get', (req, res) => {
-  res.json({ message: '获取所有用户', data: [] })
+router.get('/getList', (req, res) => {
+  res.json({ message: '获取所有用户1', data: [] })
 })
 
 // 获取单个用户

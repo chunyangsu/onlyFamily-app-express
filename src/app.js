@@ -1,18 +1,14 @@
-// 必须是整个项目的第一行代码！
+// 注意：必须是整个项目的第一行代码！
 require('module-alias/register')
-// // 引入express
+// 引入express
 const express = require('express')
 // 创建实例
 const app = express()
-// 引入汇聚后的总路由
+// 引入自动加载的路由入口文件
 const routes = require('@/routes')
 
 const port = 3000
 
-// 基础路由
-// app.get('/', (req, res) => {
-//   res.send('Hello World!')
-// })
 // 挂载所有路由，统一加上 /api 前缀
 app.use('/api', routes)
 

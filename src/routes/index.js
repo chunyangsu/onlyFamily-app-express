@@ -2,19 +2,14 @@
 const express = require('express')
 const fs = require('fs')
 const path = require('path')
+const autoLoadModules = require('@/utils/autoLoader')
 
 const router = express.Router()
+const loadedRoutes = autoLoadModules(path.join(__dirname, 'modules'))
 
-// 获取当前 modules 目录的绝对路径
-const modulesDir = path.join(__dirname, 'modules')
-
-// 遍历 modules 目录并自动挂载路由到index.js中
-fs.readdirSync(modulesDir).forEach((fileName) => {
-  if (!fileName.endsWith('.js')) return
-
-  const baseName = fileName.replace('.js', '')
-  const routeModule = require(path.join(modulesDir, fileName))
-  router.use(`/${baseName}`, routeModule)
+// 自动挂载路由，例如: user.js -> /user
+loadedRoutes.forEach(({ name, content }) => {
+  router.use(`/${name}`, content)
 })
 
 module.exports = router
