@@ -11,6 +11,8 @@ const models = require('@/models')
 
 const port = process.env.PORT
 
+// 解析客户端请求体中的json格式数据，并将它挂载到req.body上
+app.use(express.json())
 // 挂载所有路由，统一加上 /api 前缀
 app.use('/api', routes)
 
@@ -19,13 +21,12 @@ const startServer = async () => {
   try {
     // 验证连接
     await models.sequelize.authenticate()
-    console.log('数据库连接成功')
+    // console.log('数据库连接成功')
 
     // 开发阶段自动同步表结构（生产环境务必注释掉！）
     await models.sequelize.sync({ alter: true })
-    console.log('数据库表同步完成')
-  } catch (error) {
-    console.error('数据库初始化失败:', error.message)
+  } catch (err) {
+    console.error(err.message)
   }
 
   // 数据库就绪后，再启动 HTTP 服务器

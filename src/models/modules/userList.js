@@ -2,8 +2,8 @@ const { DataTypes } = require('sequelize')
 // 引入数据库连接实例
 const sequelize = require('@/config/database')
 
-const UserList = sequelize.define(
-  'UserList',
+const userList = sequelize.define(
+  'userList',
   {
     id: {
       type: DataTypes.INTEGER, // 数据类型
@@ -40,12 +40,14 @@ const UserList = sequelize.define(
     createTime: {
       type: DataTypes.BIGINT,
       allowNull: false,
+      defaultValue: 0,
       comment: '创建时间',
     },
     // 更新时间 (映射为 updateTime，使用 BIGINT 时间戳)
     updateTime: {
       type: DataTypes.BIGINT,
       allowNull: false,
+      defaultValue: 0,
       comment: '更新时间',
     },
   },
@@ -55,9 +57,20 @@ const UserList = sequelize.define(
     timestamps: true, // 开启自动时间戳管理
     createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段
     updatedAt: 'updateTime', // 将 updatedAt 映射到 updateTime 字段
-
+    // 生命周期钩子，自动处理 BIGINT 时间戳
+    hooks: {
+      // 在创建数据之前，自动填入当前时间戳
+      beforeCreate: (instance) => {
+        const now = Date.now()
+        instance.createTime = now
+      },
+      // 在更新数据之前，自动更新 updateTime
+      beforeUpdate: (instance) => {
+        instance.updateTime = Date.now()
+      },
+    },
     // 重要：因为时间戳被改为了 BIGINT，Sequelize 默认的 Date 转换会报错
-    // 我们需要告诉 Sequelize 不要自动把 BIGINT 转成 Date 对象
+    // 防止 Sequelize 自动将 BIGINT 转换为 Date 对象
     getterMethods: {
       createTime() {
         return this.getDataValue('createTime')
@@ -69,4 +82,4 @@ const UserList = sequelize.define(
   },
 )
 
-module.exports = UserList
+module.exports = userList

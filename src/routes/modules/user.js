@@ -1,12 +1,14 @@
 // 用户管理
 const express = require('express')
 const router = express.Router()
-const user = require('@/controllers/modules/user')
+const userController = require('@/controllers/modules/user')
+const { getUserList, createUser } = userController
+
 // 获取用户列表
-// router.get('/getList', (req, res) => {
-//   res.json({ message: '获取所有用户1', data: [] })
-// })
-router.get('/getList', user.getList)
+router.get('/getList', getUserList)
+
+// 创建用户
+router.post('/create', createUser)
 
 // 获取单个用户
 // router.get('/:id', (req, res) => {
@@ -14,9 +16,13 @@ router.get('/getList', user.getList)
 //   res.json({ message: `获取用户 ${id}`, data: {} })
 // })
 
-// 创建用户
-// router.post('/', (req, res) => {
-//   res.status(201).json({ message: '创建用户成功' })
-// })
+// 获取客户详情的路由
+// router.get('/customer/detail/:id', getCustomerDetail)
+
+// 编辑客户的路由
+// router.put('/customer/', editCustomer)
+
+// 删除客户的路由
+// router.delete('/customer/:id', deleteCustomer)
 
 module.exports = router
