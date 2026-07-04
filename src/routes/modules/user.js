@@ -1,11 +1,12 @@
 // 用户管理
 const express = require('express')
 const router = express.Router()
-
+const user = require('@/controllers/modules/user')
 // 获取用户列表
-router.get('/getList', (req, res) => {
-  res.json({ message: '获取所有用户1', data: [] })
-})
+// router.get('/getList', (req, res) => {
+//   res.json({ message: '获取所有用户1', data: [] })
+// })
+router.get('/getList', user.getList)
 
 // 获取单个用户
 // router.get('/:id', (req, res) => {
