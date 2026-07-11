@@ -11,12 +11,12 @@ const userService = {
   },
   /**
    * 创建用户
-   * @param {Object} userData 对象参数：name, mobile, password, email
+   * @param {Object} formData 对象参数：name, mobile, password, email
    */
-  createUser: async (userData) => {
+  createUser: async (formData) => {
     // Sequelize 会自动处理 createTime 和 updateTime 的时间戳
-    const newUser = await userList.create(userData)
-    return newUser
+    const newData = await userList.create(formData)
+    return newData
   },
 }
 
