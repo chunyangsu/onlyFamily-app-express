@@ -17,10 +17,10 @@ const errorHandler = (err, req, res, next) => {
   console.log(err.name)
 
   // 3. 开发环境打印详细错误堆栈，方便排查问题
-  // if (process.env.NODE_ENV === 'development') {
-  //   console.error(`[${statusCode}] ${message}`)
-  //   console.error(err.stack)
-  // }
+  if (process.env.NODE_ENV === 'development') {
+    //   console.error(`[${statusCode}] ${message}`)
+    //   console.error(err.stack)
+  }
 
   // 2. 处理自定义业务异常 (AppError)
   // if (err instanceof AppError) {

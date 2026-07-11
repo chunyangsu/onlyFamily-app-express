@@ -18,7 +18,7 @@ const response = {
     const response = {
       code: code,
       data: data,
-      msg: msg,
+      msg: msg
     }
     return res.status(httpStatus).json(response)
   },
@@ -34,10 +34,10 @@ const response = {
     const response = {
       code: code,
       data: null,
-      msg: msg,
+      msg: msg
     }
     return res.status(httpStatus).json(response)
-  },
+  }
 }
 
 module.exports = response
