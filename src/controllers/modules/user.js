@@ -28,10 +28,29 @@ const userController = {
       name,
       mobile,
       password,
-      email,
+      email
     })
     response.success(res, newUser)
   }),
+
+  /**
+   * 登录
+   */
+  login: asyncHandler(async (req, res) => {
+    // const { name, mobile, password, email } = req.body
+    // 校验必传参数
+    // if (!mobile || !password) {
+    //   return response.error(res, '手机号和密码为必填项')
+    // }
+    // 调用service中的方法
+    // const newUser = await userService.login({
+    //   name,
+    //   mobile,
+    //   password,
+    //   email,
+    // })
+    // response.success(res, newUser)
+  })
 }
 
 module.exports = userController

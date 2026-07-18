@@ -1,4 +1,3 @@
-const sequelize = require('@/config/database')
 const { userList } = require('@/models')
 
 const userService = {
@@ -17,7 +16,7 @@ const userService = {
     // Sequelize 会自动处理 createTime 和 updateTime 的时间戳
     const newData = await userList.create(formData)
     return newData
-  },
+  }
 }
 
 module.exports = userService

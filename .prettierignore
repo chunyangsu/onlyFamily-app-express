@@ -2,7 +2,7 @@ node_modules
 dist
 # public
 # .husky
-.vscode
-.idea
-*.sh
-*.md
+# .vscode
+# .idea
+# *.sh
+# *.md
