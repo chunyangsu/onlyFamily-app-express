@@ -9,7 +9,7 @@ const routes = require('@/routes')
 // 引入数据模型层的入口文件
 const models = require('@/models')
 // 引入全局错误处理中间件
-const errorHandler = require('@/middlewares/errorHandler')
+const errorMiddleware = require('@/middlewares/errorMiddleware')
 
 const port = process.env.PORT
 
@@ -19,7 +19,7 @@ app.use(express.json())
 app.use('/api', routes)
 
 // 全局错误处理(必须放在所有中间件和路由的最后)
-app.use(errorHandler)
+app.use(errorMiddleware)
 
 // 测试数据库连接
 const startServer = async () => {

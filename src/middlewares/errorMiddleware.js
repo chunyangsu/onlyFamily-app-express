@@ -1,11 +1,11 @@
 // 引入：封装的统一响应工具
-const response = require('@/utils/response')
+const { fail } = require('@/utils/responseHandler')
 
 /**
  * 全局错误处理中间件
  * 必须接收 4 个参数 (err, req, res, next)
  */
-const errorHandler = (err, req, res, next) => {
+const errorMiddleware = (err, req, res, next) => {
   // 打印错误日志
   console.log('status')
   console.log(err.status)
@@ -24,7 +24,7 @@ const errorHandler = (err, req, res, next) => {
 
   // 2. 处理自定义业务异常 (AppError)
   // if (err instanceof AppError) {
-  //   return response.fail(res, err.code, err.message)
+  //   return fail(res, err.code, err.message)
   // }
 
   // 处理特定类型的错误
@@ -41,8 +41,8 @@ const errorHandler = (err, req, res, next) => {
   // 错误信息
   const msg = err.message || '服务器内部错误'
 
-  // 返回错误响应
-  response.error(res, msg, httpStatus)
+  // 返回失败响应
+  fail(res, msg, httpStatus)
 }
 
-module.exports = errorHandler
+module.exports = errorMiddleware

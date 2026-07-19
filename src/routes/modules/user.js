@@ -4,6 +4,16 @@ const router = express.Router()
 const userController = require('@/controllers/modules/user')
 const { getUserList, createUser, login } = userController
 
+// ============ 公有接口 ============
+
+// 登录
+router.post('/login', login)
+
+// 退出登录
+// router.post('/logout', logout)
+
+// ============ 私有接口，需要鉴权 ============
+
 // 获取用户列表
 router.get('/getList', getUserList)
 
@@ -24,11 +34,5 @@ router.post('/create', createUser)
 
 // 删除客户的路由
 // router.delete('/customer/:id', deleteCustomer)
-
-// 登录
-router.post('/login', login)
-
-// 退出登录
-// router.post('/logout', logout)
 
 module.exports = router

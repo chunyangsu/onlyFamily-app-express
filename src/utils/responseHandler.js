@@ -5,7 +5,7 @@ const codeEnum = require('@/data/enum/code')
  * 所有接口返回格式保持一致
  */
 
-const response = {
+const responseHandler = {
   /**
    * 成功响应
    * @param {Object} res - 响应对象
@@ -30,7 +30,7 @@ const response = {
    * @param {number} httpStatus - HTTP 状态码
    * @param {number} code - 业务状态码
    */
-  error(res, msg = '请求失败', httpStatus = 500, code = 500) {
+  fail(res, msg = '请求失败', httpStatus = 500, code = 500) {
     const response = {
       code: code,
       data: null,
@@ -40,4 +40,4 @@ const response = {
   }
 }
 
-module.exports = response
+module.exports = responseHandler
