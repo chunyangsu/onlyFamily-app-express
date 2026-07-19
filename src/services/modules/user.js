@@ -1,6 +1,6 @@
 const { userList } = require('@/models')
 const codeEnum = require('@/data/enum/code')
-const jwt = require('jsonwebtoken')
+const { generateToken } = require('@/utils/jwt')
 
 const userService = {
   /**
@@ -30,11 +30,11 @@ const userService = {
     }
 
     // 3. 验证通过，生成 JWT Token
-    const token = jwt.sign(
-      { id: userData.id, name: userData.name, mobile: userData.mobile }, // Payload：存放实际需要传递的数据
-      process.env.JWT_SECRET, // Secret ：密钥
-      { expiresIn: process.env.JWT_EXPIRES_IN } // expiresIn：令牌有效期
-    )
+    const token = generateToken({
+      id: userData.id,
+      name: userData.name,
+      mobile: userData.mobile
+    })
 
     // 4. 生成返回数据
     const resInfo = {

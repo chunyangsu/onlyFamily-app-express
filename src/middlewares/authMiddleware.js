@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken')
-const { success, fail } = require('@/utils/responseHandler')
+const { verifyToken } = require('@/utils/jwt')
+const { fail } = require('@/utils/responseHandler')
 const codeEnum = require('@/data/enum/code')
 
 /**
@@ -18,14 +18,15 @@ const errorMiddleware = (req, res, next) => {
   const token = authHeader.split(' ')[1]
 
   try {
-    // 3. 验证 Token 并解析 Payload
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    // 3. 验证 Token 并解析 Payload对象
+    const payloadInfo = verifyToken(token)
 
     // 4. 将用户信息挂载到 req 对象上，方便后续 Controller 使用
-    req.user = decoded
+    req.user = payloadInfo
     next() // 验证通过，放行
   } catch (error) {
     // Token 过期或签名错误
+    console.log(error)
     return fail(res, '身份凭证无效或已过期', 401, codeEnum.unauthorized)
   }
 }

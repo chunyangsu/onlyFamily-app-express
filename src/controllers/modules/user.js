@@ -16,7 +16,7 @@ const userController = {
       return fail(res, '手机号和密码为必填项', 400, codeEnum.paramInvalid)
     }
 
-    // 手机号正则校验 (中国大陆手机号)
+    // 手机号格式校验 (中国大陆手机号)
     const mobileReg = /^1[3-9]\d{9}$/
     if (!mobileReg.test(mobile)) {
       return fail(res, '手机号格式不正确', 400, codeEnum.mobileFormatError)
