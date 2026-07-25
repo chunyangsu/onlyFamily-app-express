@@ -2,8 +2,8 @@ const { DataTypes } = require('sequelize')
 // 引入数据库连接实例
 const sequelize = require('@/config/database')
 
-const userList = sequelize.define(
-  'userList',
+const dishCategoryList = sequelize.define(
+  'dishCategoryList',
   {
     id: {
       type: DataTypes.INTEGER, // 数据类型
@@ -16,25 +16,13 @@ const userList = sequelize.define(
       type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: '', // 默认值为空字符串
-      comment: '姓名'
+      comment: '分类名称'
     },
-    mobile: {
-      type: DataTypes.STRING(20),
+    status: {
+      type: DataTypes.STRING(50),
       allowNull: false,
-      defaultValue: '',
-      comment: '手机号'
-    },
-    password: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      defaultValue: '',
-      comment: '密码'
-    },
-    email: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      defaultValue: '',
-      comment: '邮箱'
+      defaultValue: 'normal',
+      comment: '状态'
     },
     // 创建时间 (映射为 createTime，使用 BIGINT 时间戳)
     createTime: {
@@ -53,7 +41,7 @@ const userList = sequelize.define(
   },
   {
     // 核心配置项
-    tableName: 'user_list', // 指定数据库中的真实表名
+    tableName: 'dish_category_list', // 指定数据库中的真实表名
     timestamps: true, // 开启自动时间戳管理
     createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段
     updatedAt: 'updateTime', // 将 updatedAt 映射到 updateTime 字段
@@ -82,4 +70,4 @@ const userList = sequelize.define(
   }
 )
 
-module.exports = userList
+module.exports = dishCategoryList

@@ -35,6 +35,13 @@ const autoLoadModules = (dirPath) => {
       // 动态引入该文件内容(该文件module.exports 导出的内容)
       const moduleContent = require(absolutePath)
 
+      // 校验：引入的文件内容是否导出了有效的函数(避免因为添加了无效的js文件导致扫描遍历过程中报错)
+      // 如果模块为空（undefined）或导出的不是函数（如空对象 {}），则跳过并打印警告
+      if (typeof moduleContent !== 'function') {
+        console.warn(`[autoLoader 警告] 文件 ${moduleName} 未导出有效的函数，已自动过滤。`)
+        return
+      }
+
       moduleArr.push({
         name: moduleName,
         content: moduleContent
