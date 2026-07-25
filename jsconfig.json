@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    // 临时方案：静音TypeScript 6.0 版本的弃用警告，用于隐藏 baseUrl 的弃用提示
+    "ignoreDeprecations": "6.0"
+  },
+  "exclude": ["node_modules"]
+}
