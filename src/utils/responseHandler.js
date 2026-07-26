@@ -30,7 +30,7 @@ const responseHandler = {
    * @param {number} httpStatus - HTTP 状态码
    * @param {number} code - 业务状态码
    */
-  fail(res, msg = '请求失败', httpStatus = 500, code = 500) {
+  fail(res, msg = '请求失败', httpStatus = 500, code = codeEnum.unknownError) {
     const response = {
       code: code,
       data: null,

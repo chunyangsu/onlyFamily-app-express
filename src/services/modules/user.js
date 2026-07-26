@@ -24,8 +24,8 @@ const userService = {
     // 2. 明文密码比对：如果用户不存在，或者密码不一致，统一抛出错误
     if (!userData || !userData.password || userData.password !== password) {
       const error = new Error('手机号或密码错误')
-      error.bizCode = codeEnum.loginFailed
-      error.httpCode = 401
+      error.status = 200
+      error.code = codeEnum.loginFailed
       throw error
     }
 
@@ -53,8 +53,8 @@ const userService = {
    */
   getUserList: async () => {
     // 等价于 SELECT * FROM user_list
-    const userList = await userList.findAll()
-    return userList
+    const list = await userList.findAll()
+    return list
   },
   /**
    * 创建用户

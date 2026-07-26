@@ -1,5 +1,6 @@
 // 引入：封装的统一响应工具
 const { fail } = require('@/utils/responseHandler')
+const codeEnum = require('@/data/enum/code')
 
 /**
  * 全局错误处理中间件
@@ -36,13 +37,15 @@ const errorMiddleware = (err, req, res, next) => {
   //   return error(res, err.message, 401, 401)
   // }
 
-  // 错误状态码
-  const httpStatus = err.status || 500
   // 错误信息
   const msg = err.message || '服务器内部错误'
+  // http错误状态码
+  const httpStatus = err.status || 500
+  // 业务状态码
+  const code = err.code || codeEnum.unknownError
 
   // 返回失败响应
-  fail(res, msg, httpStatus)
+  fail(res, msg, httpStatus, code)
 }
 
 module.exports = errorMiddleware

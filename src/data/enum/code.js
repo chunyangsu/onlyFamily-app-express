@@ -4,7 +4,7 @@
 
 const codeEnum = {
   success: 0, // 请求成功(默认值)
-  unknownError: -1, // 未知系统错误
+  unknownError: -1, // 未知错误
   unauthorized: 10001, // 未授权登录
   paramInvalid: 10002, // 参数校验失败
 
