@@ -24,6 +24,18 @@ const dishList = sequelize.define(
       defaultValue: 0,
       comment: '菜品分类id'
     },
+    introduction: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      defaultValue: '', // 默认值为空字符串
+      comment: '菜品介绍'
+    },
+    makeProcess: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      defaultValue: '', // 默认值为空字符串
+      comment: '制作过程'
+    },
     price: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,

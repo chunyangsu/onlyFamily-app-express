@@ -18,7 +18,7 @@ const dishController = {
    * 新增菜品
    */
   createDish: asyncHandler(async (req, res) => {
-    const { name, categoryId, price } = req.body
+    const { name, categoryId, introduction, makeProcess, price } = req.body
     // 校验必传参数
     if (!name) {
       return fail(res, '菜品名称不能为空', 400, codeEnum.paramInvalid)
@@ -27,6 +27,8 @@ const dishController = {
     const tempParams = {
       name: name,
       categoryId: categoryId,
+      introduction: introduction,
+      makeProcess: makeProcess,
       price: price,
       createId: 1
     }
