@@ -1,4 +1,4 @@
-// 用户管理
+// 菜品分类管理
 const express = require('express')
 const router = express.Router()
 const dishCategoryController = require('@/controllers/modules/foodMenu/dishCategory')
