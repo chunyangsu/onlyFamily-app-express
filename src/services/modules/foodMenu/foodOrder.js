@@ -1,4 +1,4 @@
-const { dishCategoryList, dishList, foodOrderList, foodOrderDetails, sequelize } = require('@/models')
+const { dishCategoryList, dishList, foodOrderList, foodOrderDetails, userList, sequelize } = require('@/models')
 const { generateFoodOrderCode } = require('@/utils/codeRule')
 
 const foodOrderService = {
@@ -6,8 +6,31 @@ const foodOrderService = {
    * 获取食物订单列表
    */
   getFoodOrderList: async () => {
-    const list = await foodOrderList.findAll()
-    return list
+    const list = await foodOrderList.findAll({
+      attributes: ['id', 'code', 'createId', 'createTime'],
+      include: [
+        {
+          model: userList,
+          as: 'creator',
+          attributes: ['name']
+        },
+        {
+          model: foodOrderDetails,
+          // 定义返回时接收的数组别名
+          as: 'dishArr',
+          // 设置字段别名
+          attributes: [['dishId', 'id'], ['dishName', 'name'], 'price', 'num']
+        }
+      ],
+      order: [['createTime', 'DESC']]
+    })
+    return list.map((order) => {
+      const data = order.toJSON()
+      return {
+        ...data,
+        creator: data.creator ? data.creator.name : ''
+      }
+    })
   },
   /**
    * 新增食物订单

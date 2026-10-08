@@ -15,3 +15,6 @@ loadedModels.forEach(({ name, content }) => {
 models.sequelize = sequelize
 
 module.exports = models
+
+// 注册模型关联关系(注意：这里必须在所有模型加载完成后再执行，否则可能会出现模型未定义的情况)
+require('./relationship')
