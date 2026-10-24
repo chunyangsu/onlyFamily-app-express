@@ -1,5 +1,8 @@
 // 注意：必须是整个项目的第一行代码！
 require('module-alias/register')
+// 注意，dotenv 必须在加载 OSS 配置模块之前执行，所以这里先 require('dotenv').config()，再加载 app
+require('dotenv').config()
+
 // 引入express
 const express = require('express')
 // 创建实例

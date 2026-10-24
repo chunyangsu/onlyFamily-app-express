@@ -24,8 +24,8 @@ const foodOrderService = {
       ],
       order: [['createTime', 'DESC']]
     })
-    return list.map((order) => {
-      const data = order.toJSON()
+    return list.map((item) => {
+      const data = item.toJSON()
       return {
         ...data,
         creator: data.creator ? data.creator.name : ''
