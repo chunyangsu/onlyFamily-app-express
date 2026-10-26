@@ -3,13 +3,13 @@ const { ossConfig, stsClient } = require('@/config/oss')
 
 // 只允许明确列出的业务类型和图片格式。
 // 客户端不能自行指定任意 OSS 路径。
-const FILE_TYPES = {
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp'
-}
+// const FILE_TYPES = {
+//   'image/jpeg': '.jpg',
+//   'image/png': '.png',
+//   'image/webp': '.webp'
+// }
 
-const CATEGORIES = new Set(['avatar', 'food', 'attachment'])
+const moduleEnum = new Set(['dish'])
 
 function hmacSha256(key, value, encoding) {
   return crypto.createHmac('sha256', key).update(value, 'utf8').digest(encoding)
@@ -86,22 +86,22 @@ function assertV4Credential(credential, accessKeyId, date, region) {
 }
 
 // 创建上传附件的policy
-async function createUploadPolicy({ category, contentType }) {
+async function createUploadPolicy({ module }) {
   assertEndpointRegion(ossConfig.endpoint, ossConfig.region)
 
-  if (!CATEGORIES.has(category)) {
+  if (!moduleEnum.has(module)) {
     const error = new Error('不支持的附件业务类型')
     error.status = 400
     throw error
   }
 
-  const extension = FILE_TYPES[contentType]
+  // const extension = FILE_TYPES[contentType]
 
-  if (!extension) {
-    const error = new Error('不支持的图片格式')
-    error.status = 400
-    throw error
-  }
+  // if (!extension) {
+  //   const error = new Error('不支持的图片格式')
+  //   error.status = 400
+  //   throw error
+  // }
 
   const maxFileSize = ossConfig.maxFileSize
 
@@ -115,13 +115,13 @@ async function createUploadPolicy({ category, contentType }) {
     throw new Error('OSS_UPLOAD_POLICY_TTL 必须在 10 到 300 秒之间')
   }
 
-  // 后续正式接入用户认证时，路径还应包含经过认证的 userId。
-  // 这里使用随机 UUID，避免客户端控制对象路径。
+  // 后续正式接入用户认证时，路径还应包含经过认证的 userId
+  // 这里使用随机 UUID，避免客户端控制对象路径
   const now = new Date()
   const year = now.getUTCFullYear()
   const month = String(now.getUTCMonth() + 1).padStart(2, '0')
 
-  const objectKey = [category, year, month, `${crypto.randomUUID()}${extension}`].join('/')
+  const objectKey = [module, year, month, `${crypto.randomUUID()}`].join('/')
 
   // 将 STS 临时权限进一步限制到本次生成的单个对象。
   const inlinePolicy = {
@@ -135,9 +135,9 @@ async function createUploadPolicy({ category, contentType }) {
     ]
   }
 
-  // 900 秒为 STS 会话有效期。
-  // 临时凭证不会直接返回给小程序。
-  const stsResult = await stsClient.assumeRole(ossConfig.roleArn, JSON.stringify(inlinePolicy), 900, `only-family-${category}`)
+  // 900 秒为 STS 会话有效期
+  // 临时凭证不会直接返回给小程序
+  const stsResult = await stsClient.assumeRole(ossConfig.roleArn, JSON.stringify(inlinePolicy), 900, `only-family-${module}`)
 
   const credentials = stsResult?.credentials
 
@@ -215,7 +215,6 @@ async function createUploadPolicy({ category, contentType }) {
 
 module.exports = {
   createUploadPolicy,
-  // Exported for focused configuration tests; not part of the HTTP response.
   getPostObjectHost,
   assertV4Credential
 }

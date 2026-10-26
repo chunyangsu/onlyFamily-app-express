@@ -18,18 +18,19 @@ const dishController = {
    * 新增菜品
    */
   createDish: asyncHandler(async (req, res) => {
-    const { name, categoryId, introduction, makeProcess, price } = req.body
+    const { name, attachmentId, categoryId, introduction, makeProcess, price } = req.body
     // 校验必传参数
     if (!name) {
       return fail(res, '菜品名称不能为空', 400, codeEnum.paramInvalid)
     }
 
     const tempParams = {
-      name: name,
-      categoryId: categoryId,
-      introduction: introduction,
-      makeProcess: makeProcess,
-      price: price,
+      name,
+      attachmentId,
+      categoryId,
+      introduction,
+      makeProcess,
+      price,
       createId: 1
     }
     // 调用service中的方法

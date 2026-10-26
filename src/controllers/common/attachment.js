@@ -9,10 +9,10 @@ const attachmentController = {
   /**
    * 获取附件列表
    */
-  // getDishList: asyncHandler(async (req, res) => {
-  //   const list = await dishService.getDishList()
-  //   success(res, list)
-  // }),
+  getAttachmentList: asyncHandler(async (req, res) => {
+    const list = await attachmentService.getAttachmentList()
+    success(res, list)
+  }),
 
   /**
    * 新增附件：支持批量新增

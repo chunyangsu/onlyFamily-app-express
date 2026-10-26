@@ -18,17 +18,23 @@ const attachmentList = sequelize.define(
       defaultValue: '', // 默认值为空字符串
       comment: '附件名称'
     },
+    mimeType: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: '', // 默认值为空字符串
+      comment: '文件MIME类型'
+    },
     objectKey: {
       type: DataTypes.STRING(512),
       allowNull: false,
       defaultValue: '',
       comment: 'OSS对象唯一标识：用于查询、访问和删除文件'
     },
-    category: {
+    module: {
       type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: '',
-      comment: '附件分类'
+      comment: '附件所属模块'
     },
     status: {
       type: DataTypes.STRING(50),

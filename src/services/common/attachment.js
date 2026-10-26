@@ -27,8 +27,6 @@ const attachmentService = {
       )
       return newDataArr.map((item) => ({
         id: item.id,
-        name: item.name,
-        category: item.category,
         objectKey: item.objectKey
       }))
     })

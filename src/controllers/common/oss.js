@@ -14,11 +14,10 @@ const ossController = {
    * 4. 获取 STS 临时凭证
    */
   getUploadPolicy: asyncHandler(async (req, res) => {
-    const { category, contentType } = req.body
+    const { module } = req.body
 
     const tempParams = {
-      category: category,
-      contentType: contentType
+      module: module
     }
     // 调用service中的方法
     const newData = await createUploadPolicy(tempParams)
