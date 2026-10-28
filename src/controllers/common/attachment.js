@@ -10,7 +10,12 @@ const attachmentController = {
    * 获取附件列表
    */
   getAttachmentList: asyncHandler(async (req, res) => {
-    const list = await attachmentService.getAttachmentList()
+    const { idArr } = req.query
+    if (!idArr || idArr === '') {
+      return fail(res, '附件id不能为空', 400, codeEnum.paramInvalid)
+    }
+    const tempIdArr = JSON.parse(idArr)
+    const list = await attachmentService.getAttachmentList(tempIdArr)
     success(res, list)
   }),
 

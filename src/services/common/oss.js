@@ -178,8 +178,8 @@ async function createUploadPolicy({ module }) {
       },
       {
         'x-oss-date': dateTime // 请求时间，需与签名里的日期一致，格式 YYYYMMDDTHHmmssZ
-      }
-      // ['eq', '$success_action_status', '200'],
+      },
+      ['eq', '$success_action_status', '200']
       // ['eq', '$content-type', contentType],
       // ['content-length-range', 1, maxFileSize] // 限制文件大小
     ]
@@ -205,9 +205,9 @@ async function createUploadPolicy({ module }) {
     signatureVersion: 'OSS4-HMAC-SHA256', // 签名版本
     credential, // 临时凭证对应的Credential字符串
     date: dateTime, // 签名使用的UTC时间
-    securityToken: credentials.SecurityToken // STS返回的临时安全令牌
+    securityToken: credentials.SecurityToken, // STS返回的临时安全令牌
     // contentType, // 上传文件的MIME类型
-    // successActionStatus: 200,
+    successActionStatus: 200
     // maxFileSize, // 限制文件大小
     // expiration // 上传授权是否过期
   }
