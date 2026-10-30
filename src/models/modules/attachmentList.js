@@ -30,6 +30,12 @@ const attachmentList = sequelize.define(
       defaultValue: '',
       comment: 'OSS对象唯一标识：用于查询、访问和删除文件'
     },
+    familyId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '所属家庭id'
+    },
     module: {
       type: DataTypes.STRING(50),
       allowNull: false,

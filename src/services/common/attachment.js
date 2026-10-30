@@ -50,15 +50,16 @@ const attachmentService = {
   },
   /**
    * 添加附件
-   * @param {Object} attachmentArr 附件数组
+   * @param {Object} data
    */
-  addAttachment: async (attachmentArr) => {
+  addAttachment: async (data) => {
     // 开启事务
     return sequelize.transaction(async (transaction) => {
       const newDataArr = await attachmentList.bulkCreate(
-        attachmentArr.map((item) => ({
+        data.attachmentArr.map((item) => ({
           ...item,
-          createId: 1
+          familyId: data.familyId,
+          createId: data.userId
         })),
         {
           transaction,

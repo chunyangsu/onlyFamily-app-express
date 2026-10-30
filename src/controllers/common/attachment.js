@@ -26,6 +26,8 @@ const attachmentController = {
    * objectKey：OSS对象key
    */
   addAttachment: asyncHandler(async (req, res) => {
+    const userId = req.headers['user-id']
+    const familyId = req.headers['family-id']
     const { attachmentArr } = req.body
     // 校验必传参数
     if (!attachmentArr || (Array.isArray(attachmentArr) && attachmentArr.length === 0)) {
@@ -33,7 +35,12 @@ const attachmentController = {
     }
 
     // 调用service中的方法
-    const newData = await attachmentService.addAttachment(attachmentArr)
+    const params = {
+      userId,
+      familyId,
+      attachmentArr
+    }
+    const newData = await attachmentService.addAttachment(params)
     success(res, newData)
   })
 }

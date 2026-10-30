@@ -18,6 +18,12 @@ const userList = sequelize.define(
       defaultValue: '', // 默认值为空字符串
       comment: '姓名'
     },
+    attachmentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '附件id(头像)'
+    },
     mobile: {
       type: DataTypes.STRING(20),
       allowNull: false,

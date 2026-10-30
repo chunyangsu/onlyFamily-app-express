@@ -1,21 +1,29 @@
 const crypto = require('node:crypto')
 const { ossConfig, stsClient } = require('@/config/oss')
+const { generateObjectKey } = require('@/utils/oss')
 
-// 只允许明确列出的业务类型和图片格式。
-// 客户端不能自行指定任意 OSS 路径。
-// const FILE_TYPES = {
-//   'image/jpeg': '.jpg',
-//   'image/png': '.png',
-//   'image/webp': '.webp'
-// }
-
-const moduleEnum = new Set(['dish'])
-
-function hmacSha256(key, value, encoding) {
+/**
+ * HMAC-SHA256 加密计算
+ * 底层加密工具，使用 Node.js 内置的 crypto 模块
+ * 作用：为后面的V4签名计算提供基础能力。它不是普通的哈希计算，而是结合密钥进行的消息认证码计算
+ * @param {*} key HMAC使用的密钥
+ * @param {*} value 需要参与计算的数据
+ * @param {*} encoding 输出格式，例如 hex
+ * @returns 返回十六进制字符串形式的 HMAC 计算结果
+ */
+const hmacSha256 = (key, value, encoding) => {
   return crypto.createHmac('sha256', key).update(value, 'utf8').digest(encoding)
 }
 
-function getV4SigningKey(secret, date, region) {
+/**
+ * 派生 OSS V4 签名密钥
+ * OSS V4 签名不是直接使用 AccessKeySecret 对 Policy 签名，而是按照规定的顺序派生签名密钥
+ * @param {*} secret
+ * @param {*} date
+ * @param {*} region
+ * @returns
+ */
+const getV4SigningKey = (secret, date, region) => {
   const dateKey = hmacSha256(`aliyun_v4${secret}`, date)
 
   const dateRegionKey = hmacSha256(dateKey, region)
@@ -25,32 +33,52 @@ function getV4SigningKey(secret, date, region) {
   return hmacSha256(dateRegionServiceKey, 'aliyun_v4_request')
 }
 
-function createV4Signature(accessKeySecret, date, region, policyBase64) {
+/**
+ * 生成最终 V4 签名
+ * 作用：让 OSS 能够验证上传请求携带的签名是否与 Policy 相匹配
+ * 这个方法分为两步：
+ * 1. 调用 getV4SigningKey()，得到最终签名密钥
+ * 2. 使用该密钥对 policyBase64 进行 HMAC-SHA256 计算，输出十六进制签名
+ * @param {*} accessKeySecret
+ * @param {*} date
+ * @param {*} region
+ * @param {*} policyBase64
+ * @returns
+ */
+const createV4Signature = (accessKeySecret, date, region, policyBase64) => {
   const signingKey = getV4SigningKey(accessKeySecret, date, region)
-
-  // OSS V4 表单签名结果使用十六进制字符串。
+  // OSS V4 表单签名结果使用十六进制字符串
   return hmacSha256(signingKey, policyBase64, 'hex')
 }
 
-function getUtcDate() {
+/**
+ * 生成 UTC 签名时间
+ * @returns
+ */
+const getUtcDate = () => {
   const now = new Date()
-
   const date = now
     .toISOString()
     .replace(/[-:]/g, '')
     .replace(/\.\d{3}Z$/, 'Z')
-
   return {
-    date: date.slice(0, 8),
-    dateTime: date
+    date: date.slice(0, 8), // 用于派生签名密钥
+    dateTime: date // 用于构造 x-oss-date 和 x-oss-credential 对应的日期信息
   }
 }
 
 /**
- * Build the PostObject endpoint from the configured bucket endpoint.
- * OSS PostObject must target the bucket root, never an object URL.
+ * 生成 OSS 表单上传地址
+ * 这个方法将 Bucket Endpoint 转换为 PostObject 所需的地址
+ * 根据配置的存储桶端点构建PostObject端点
+ * OSS PostObject必须以bucket根目录为目标，而不能以对象URL为目标
+ * 它还会校验：
+    - Endpoint 和 Bucket 是否配置。
+    - 是否使用 HTTPS。
+    - Endpoint 是否错误地包含路径、查询参数或凭证。
+    - Bucket 前缀是否已经存在，避免重复拼接。
  */
-function getPostObjectHost(endpoint, bucket) {
+const getPostObjectHost = (endpoint, bucket) => {
   const rawEndpoint = String(endpoint || '').trim()
   if (!rawEndpoint || !bucket) {
     throw new Error('OSS_ENDPOINT 和 OSS_BUCKET 配置不能为空')
@@ -70,7 +98,13 @@ function getPostObjectHost(endpoint, bucket) {
   return `https://${hostname}${endpointUrl.port ? `:${endpointUrl.port}` : ''}/`
 }
 
-function assertEndpointRegion(endpoint, region) {
+/**
+ * 校验地域配置
+ * 作用：防止 OSS Endpoint 和 Region 配错
+ * @param {*} endpoint
+ * @param {*} region
+ */
+const assertEndpointRegion = (endpoint, region) => {
   const hostname = new URL(/^https?:\/\//i.test(endpoint) ? endpoint : `https://${endpoint}`).hostname.toLowerCase()
   const regionSuffix = `oss-${region}`.toLowerCase()
   if (!hostname.includes(regionSuffix)) {
@@ -78,7 +112,21 @@ function assertEndpointRegion(endpoint, region) {
   }
 }
 
-function assertV4Credential(credential, accessKeyId, date, region) {
+/**
+ * 校验 Credential 格式
+ * 作用：提前发现后端拼接 Credential 时的格式错误，而不是等到前端上传后才收到 OSS 的签名错误
+ * 它检查：
+   - AccessKeyId 是否一致。
+   - 日期是否一致。
+   - Region 是否一致。
+   - 服务名是否为 oss。
+   - 请求类型是否为 aliyun_v4_request。
+ * @param {*} credential 
+ * @param {*} accessKeyId 
+ * @param {*} date 
+ * @param {*} region 
+ */
+const assertV4Credential = (credential, accessKeyId, date, region) => {
   const parts = String(credential || '').split('/')
   if (parts.length !== 5 || parts[0] !== accessKeyId || parts[1] !== date.slice(0, 8) || parts[2] !== region || parts[3] !== 'oss' || parts[4] !== 'aliyun_v4_request') {
     throw new Error('OSS V4 credential 格式错误，请检查 AccessKey、日期和 Region')
@@ -86,22 +134,8 @@ function assertV4Credential(credential, accessKeyId, date, region) {
 }
 
 // 创建上传附件的policy
-async function createUploadPolicy({ module }) {
+const createUploadPolicy = async ({ familyId, module }) => {
   assertEndpointRegion(ossConfig.endpoint, ossConfig.region)
-
-  if (!moduleEnum.has(module)) {
-    const error = new Error('不支持的附件业务类型')
-    error.status = 400
-    throw error
-  }
-
-  // const extension = FILE_TYPES[contentType]
-
-  // if (!extension) {
-  //   const error = new Error('不支持的图片格式')
-  //   error.status = 400
-  //   throw error
-  // }
 
   const maxFileSize = ossConfig.maxFileSize
 
@@ -115,15 +149,10 @@ async function createUploadPolicy({ module }) {
     throw new Error('OSS_UPLOAD_POLICY_TTL 必须在 10 到 300 秒之间')
   }
 
-  // 后续正式接入用户认证时，路径还应包含经过认证的 userId
-  // 这里使用随机 UUID，避免客户端控制对象路径
-  const now = new Date()
-  const year = now.getUTCFullYear()
-  const month = String(now.getUTCMonth() + 1).padStart(2, '0')
+  // 使用家庭ID、附件所属模块、年月和随机UUID生成对象路径
+  const objectKey = generateObjectKey({ familyId, module })
 
-  const objectKey = [module, year, month, `${crypto.randomUUID()}`].join('/')
-
-  // 将 STS 临时权限进一步限制到本次生成的单个对象。
+  // 将STS临时权限进一步限制到本次生成的单个对象
   const inlinePolicy = {
     Version: '1',
     Statement: [
@@ -207,14 +236,12 @@ async function createUploadPolicy({ module }) {
     date: dateTime, // 签名使用的UTC时间
     securityToken: credentials.SecurityToken, // STS返回的临时安全令牌
     // contentType, // 上传文件的MIME类型
-    successActionStatus: 200
+    successActionStatus: 200 // 上传成功后HTTP返回200
     // maxFileSize, // 限制文件大小
     // expiration // 上传授权是否过期
   }
 }
 
 module.exports = {
-  createUploadPolicy,
-  getPostObjectHost,
-  assertV4Credential
+  createUploadPolicy
 }
