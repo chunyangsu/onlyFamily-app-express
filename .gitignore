@@ -5,6 +5,7 @@ dist
 # 环境变量文件
 .env
 .env.*
+!.env.example
 # 日志文件
 *.log
 # IDE 配置文件

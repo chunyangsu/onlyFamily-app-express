@@ -2,7 +2,7 @@ const path = require('path')
 const dotenv = require('dotenv')
 
 // 获取当前环境
-const nodeEnv = process.env.NODE_ENV || 'development1'
+const nodeEnv = process.env.NODE_ENV || 'development'
 
 // 加载对应环境配置
 const envFile = `.env.${nodeEnv}`
