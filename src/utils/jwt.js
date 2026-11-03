@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const env = require('@/config/env')
 
 /**
  * 生成 JWT Token
@@ -6,7 +7,7 @@ const jwt = require('jsonwebtoken')
  * @returns {String} 生成的 Token 字符串
  */
 const generateToken = (payload) => {
-  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN })
+  const token = jwt.sign(payload, env.jwt.secret, { expiresIn: env.jwt.expiresIn })
   return token
 }
 
@@ -17,7 +18,7 @@ const generateToken = (payload) => {
  * @throws {Error} 如果 Token 无效或过期，抛出异常
  */
 const verifyToken = (token) => {
-  const payloadInfo = jwt.verify(token, process.env.JWT_SECRET)
+  const payloadInfo = jwt.verify(token, env.jwt.secret)
   return payloadInfo
 }
 

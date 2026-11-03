@@ -41,7 +41,7 @@ const familyService = {
     const params = {
       familyId: data.familyId,
       userId: data.userId,
-      role: data.role ?? 2 // 默认普通成员
+      role: data.role || 2 // 默认普通成员
     }
     const newData = await familyUserMap.create(params)
     return newData

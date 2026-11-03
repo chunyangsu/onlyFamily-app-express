@@ -4,6 +4,7 @@ node_modules
 dist
 # 环境变量文件
 .env
+.env.*
 # 日志文件
 *.log
 # IDE 配置文件

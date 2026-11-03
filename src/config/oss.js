@@ -1,9 +1,10 @@
 const OSS = require('ali-oss')
+const env = require('@/config/env')
 
-const requiredEnv = ['OSS_BUCKET', 'OSS_REGION', 'OSS_ENDPOINT', 'OSS_ACCESS_KEY_ID', 'OSS_ACCESS_KEY_SECRET', 'OSS_ROLE_ARN']
+const requiredEnv = ['bucket', 'region', 'endpoint', 'accessKeyId', 'accessKeySecret', 'roleArn']
 
 for (const key of requiredEnv) {
-  if (!process.env[key]) {
+  if (!env.oss[key]) {
     throw new Error(`缺少环境变量：${key}`)
   }
 }
@@ -21,14 +22,14 @@ function normalizeSigningRegion(value) {
 }
 
 const ossConfig = {
-  bucket: process.env.OSS_BUCKET,
-  region: normalizeSigningRegion(process.env.OSS_REGION),
-  endpoint: process.env.OSS_ENDPOINT,
-  accessKeyId: process.env.OSS_ACCESS_KEY_ID,
-  accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
-  roleArn: process.env.OSS_ROLE_ARN,
-  maxFileSize: Number(process.env.OSS_UPLOAD_MAX_SIZE || 10485760),
-  policyTtl: Number(process.env.OSS_UPLOAD_POLICY_TTL || 60)
+  bucket: env.oss.bucket,
+  region: normalizeSigningRegion(env.oss.region),
+  endpoint: env.oss.endpoint,
+  accessKeyId: env.oss.accessKeyId,
+  accessKeySecret: env.oss.accessKeySecret,
+  roleArn: env.oss.roleArn,
+  maxFileSize: Number(env.oss.uploadMaxSize),
+  policyTtl: Number(env.oss.uploadPolicyTtl)
 }
 
 // STS客户端：用于获取附件上传所需的临时凭证

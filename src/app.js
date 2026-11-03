@@ -13,8 +13,10 @@ const routes = require('@/routes')
 const models = require('@/models')
 // 引入全局错误处理中间件
 const errorMiddleware = require('@/middlewares/errorMiddleware')
+// 引入环境变量配置
+const env = require('@/config/env')
 
-const port = process.env.PORT
+const port = env.app.port
 
 // 解析客户端请求体中的json格式数据，并将它挂载到req.body上
 app.use(express.json())

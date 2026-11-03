@@ -1,6 +1,7 @@
 // 引入：封装的统一响应工具
 const { fail } = require('@/utils/responseHandler')
 const codeEnum = require('@/data/enum/code')
+const env = require('@/config/env')
 
 /**
  * 全局错误处理中间件
@@ -18,7 +19,7 @@ const errorMiddleware = (err, req, res, next) => {
   console.log(err.name)
 
   // 3. 开发环境打印详细错误堆栈，方便排查问题
-  if (process.env.NODE_ENV === 'development') {
+  if (env.app.nodeEnv === 'development') {
     //   console.error(`[${statusCode}] ${message}`)
     //   console.error(err.stack)
   }
