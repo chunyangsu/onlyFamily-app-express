@@ -2,8 +2,8 @@ const { DataTypes } = require('sequelize')
 // 引入数据库连接实例
 const sequelize = require('@/config/database')
 
-const familyUserMapList = sequelize.define(
-  'familyUserMapList',
+const familyUserMap = sequelize.define(
+  'familyUserMap',
   {
     id: {
       type: DataTypes.INTEGER, // 数据类型
@@ -27,7 +27,7 @@ const familyUserMapList = sequelize.define(
     role: {
       type: DataTypes.TINYINT.UNSIGNED,
       allowNull: false,
-      defaultValue: 2,
+      defaultValue: 2, // 管理员 1、普通成员 2
       comment: '角色'
     },
     // 创建时间 (映射为 createTime，使用 BIGINT 时间戳)
@@ -43,18 +43,11 @@ const familyUserMapList = sequelize.define(
       allowNull: false,
       defaultValue: 0,
       comment: '更新时间'
-    },
-    // 加入时间
-    joinTime: {
-      type: DataTypes.BIGINT,
-      allowNull: false,
-      defaultValue: 0,
-      comment: '加入时间'
     }
   },
   {
     // 核心配置项
-    tableName: 'family_user_map_list', // 指定数据库中的真实表名
+    tableName: 'family_user_map', // 指定数据库中的真实表名
     timestamps: true, // 开启自动时间戳管理
     createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段
     updatedAt: 'updateTime', // 将 updatedAt 映射到 updateTime 字段
@@ -83,4 +76,4 @@ const familyUserMapList = sequelize.define(
   }
 )
 
-module.exports = familyUserMapList
+module.exports = familyUserMap

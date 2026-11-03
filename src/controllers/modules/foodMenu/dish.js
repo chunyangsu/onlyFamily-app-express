@@ -24,7 +24,7 @@ const dishController = {
       return fail(res, '菜品名称不能为空', 400, codeEnum.paramInvalid)
     }
 
-    const tempParams = {
+    const params = {
       name,
       attachmentId,
       categoryId,
@@ -34,7 +34,7 @@ const dishController = {
       createId: 1
     }
     // 调用service中的方法
-    const newData = await dishService.createDish(tempParams)
+    const newData = await dishService.createDish(params)
     success(res, newData)
   })
 }
