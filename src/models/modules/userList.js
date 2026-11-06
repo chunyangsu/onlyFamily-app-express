@@ -12,11 +12,29 @@ const userList = sequelize.define(
       allowNull: false, // 是否允许为空
       comment: '主键 id' // 字段注释
     },
+    openid: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      unique: true, // 是否唯一
+      comment: '微信用户唯一标识'
+    },
+    unionid: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: '',
+      comment: '微信开放平台用户标识'
+    },
     name: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      defaultValue: '', // 默认值为空字符串
+      defaultValue: '',
       comment: '姓名'
+    },
+    nickname: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: '',
+      comment: '用户昵称'
     },
     attachmentId: {
       type: DataTypes.INTEGER,
@@ -41,6 +59,12 @@ const userList = sequelize.define(
       allowNull: false,
       defaultValue: '',
       comment: '邮箱'
+    },
+    status: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: 'normal',
+      comment: '状态'
     },
     // 创建时间 (映射为 createTime，使用 BIGINT 时间戳)
     createTime: {

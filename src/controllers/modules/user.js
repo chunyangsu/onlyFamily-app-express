@@ -10,20 +10,14 @@ const userController = {
    * 登录
    */
   login: asyncHandler(async (req, res) => {
-    const { mobile, password } = req.body
+    const { code } = req.body
     // 必填校验
-    if (!mobile || !password) {
-      return fail(res, '手机号和密码为必填项', 400, codeEnum.paramInvalid)
-    }
-
-    // 手机号格式校验 (中国大陆手机号)
-    const mobileReg = /^1[3-9]\d{9}$/
-    if (!mobileReg.test(mobile)) {
-      return fail(res, '手机号格式不正确', 400, codeEnum.mobileFormatError)
+    if (!code || code.trim() === '') {
+      return fail(res, '微信登录凭证不能为空', 400, codeEnum.paramInvalid)
     }
 
     // 调用service中的方法
-    const loginResult = await userService.login({ mobile, password })
+    const loginResult = await userService.login(code)
     // 返回成功响应
     success(res, loginResult, '登录成功')
   }),
@@ -33,27 +27,27 @@ const userController = {
   getUserList: asyncHandler(async (req, res) => {
     const userList = await userService.getUserList()
     success(res, userList)
-  }),
+  })
 
   /**
    * 新增用户
    */
-  createUser: asyncHandler(async (req, res) => {
-    const { name, mobile, password, email } = req.body
-    // 校验必传参数
-    // if (!mobile || !password) {
-    //   return error(res, '手机号和密码为必填项')
-    // }
+  // createUser: asyncHandler(async (req, res) => {
+  //   const { name, mobile, password, email } = req.body
+  //   // 校验必传参数
+  //   // if (!mobile || !password) {
+  //   //   return error(res, '手机号和密码为必填项')
+  //   // }
 
-    // 调用service中的方法
-    const newUser = await userService.createUser({
-      name,
-      mobile,
-      password,
-      email
-    })
-    success(res, newUser)
-  })
+  //   // 调用service中的方法
+  //   const newUser = await userService.createUser({
+  //     name,
+  //     mobile,
+  //     password,
+  //     email
+  //   })
+  //   success(res, newUser)
+  // })
 }
 
 module.exports = userController

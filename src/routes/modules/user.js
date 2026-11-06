@@ -2,7 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const userController = require('@/controllers/modules/user')
-const { getUserList, createUser, login } = userController
+const { getUserList, login } = userController
 
 // ============ 公有接口 ============
 
@@ -18,7 +18,7 @@ router.post('/login', login)
 router.get('/getList', getUserList)
 
 // 创建用户
-router.post('/create', createUser)
+// router.post('/create', createUser)
 
 // 获取单个用户
 // router.get('/:id', (req, res) => {

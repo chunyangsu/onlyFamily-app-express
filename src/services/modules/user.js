@@ -1,52 +1,78 @@
 const { userList } = require('@/models')
-const codeEnum = require('@/data/enum/code')
+// const codeEnum = require('@/data/enum/code')
 const { generateToken } = require('@/utils/jwt')
+const { getWechatSession } = require('@/services/common/wechat')
 
 const userService = {
   /**
    * 用户登录
-   * @param {Object} formData 对象参数：mobile, password
+   * 不存在则自动注册
+   * @param {Object} code
    */
-  login: async (formData) => {
-    const { mobile, password } = formData
+  login: async (code) => {
+    // 1. 获取微信用户身份信息
+    const wechatUserInfo = await getWechatSession(code)
+    const { openid, unionid } = wechatUserInfo
 
-    // 1. 根据手机号查找用户
-    const userData = await userList.findOne({ where: { mobile } })
-
-    // 2. 安全比对：如果用户不存在，或者密码比对失败，统一抛出错误
-    // 严禁区分“用户不存在”或“密码错误”，防止账号枚举攻击
-    // if (!userData || !(await bcrypt.compare(password, userData.password))) {
-    //   const error = new Error('手机号或密码错误')
-    //   error.bizCode = data.code.loginFailed
-    //   error.httpCode = 401
-    //   throw error
-    // }
-    // 2. 明文密码比对：如果用户不存在，或者密码不一致，统一抛出错误
-    if (!userData || !userData.password || userData.password !== password) {
-      const error = new Error('手机号或密码错误')
-      error.status = 200
-      error.code = codeEnum.loginFailed
-      throw error
-    }
-
-    // 3. 验证通过，生成 JWT Token
-    const token = generateToken({
-      id: userData.id,
-      name: userData.name,
-      mobile: userData.mobile
+    // 2. 根据 openid 查询用户是否存在
+    let user = await userList.findOne({
+      where: {
+        openid
+      },
+      paranoid: false
     })
 
-    // 4. 生成返回数据
-    const resInfo = {
-      id: userData.id,
-      name: userData.name,
-      mobile: userData.mobile,
-      email: userData.email,
-      token: token
+    // 3. todo：已软删除的用户不允许直接恢复或登录
+    // if (user && user.deletedAt) {
+    //   const error = new Error('该用户账号已注销')
+    //   error.code = 'USER_DELETED'
+    //   throw error
+    // }
+
+    if (!user) {
+      // 4. 用户不存在，自动注册创建
+      user = await userService.createUser(openid, unionid)
+    } else {
+      // 5. 用户已存在：如果表中之前没有unionid，这次获取到了，更新填充
+      if (user.unionid === '' && unionid !== '') {
+        await user.update({ unionid })
+      }
     }
 
-    // 5. 返回用户信息和token
+    // 6. todo：检查用户状态
+    // if (user.status !== 'normal') {
+    //   const error = new Error('账号已被禁用')
+    //   error.code = 'USER_DISABLED'
+    //   throw error
+    // }
+
+    // 7. 生成 JWT
+    const token = generateToken(user.id)
+
+    // 8. 生成返回数据：token和用户信息
+    const resInfo = {
+      token: token,
+      userInfo: {
+        id: user.id,
+        mobile: user.mobile,
+        name: user.name,
+        nickname: user.nickname
+      }
+    }
     return resInfo
+  },
+  /**
+   * 注册(创建)用户
+   * @param openid
+   * @param unionid
+   */
+  createUser: async (openid, unionid) => {
+    const params = {
+      openid,
+      unionid: unionid || ''
+    }
+    const newData = await userList.create(params)
+    return newData
   },
   /**
    * 获取用户列表
@@ -55,15 +81,6 @@ const userService = {
     // 等价于 SELECT * FROM user_list
     const list = await userList.findAll()
     return list
-  },
-  /**
-   * 创建用户
-   * @param {Object} formData 对象参数：name, mobile, password, email
-   */
-  createUser: async (formData) => {
-    // Sequelize 会自动处理 createTime 和 updateTime 的时间戳
-    const newData = await userList.create(formData)
-    return newData
   }
 }
 

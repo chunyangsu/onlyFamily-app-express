@@ -13,6 +13,17 @@ dotenv.config({
   path: path.resolve(process.cwd(), envFile)
 })
 
+// 校验微信小程序配置
+if (nodeEnv === 'production') {
+  if (!process.env.WECHAT_APP_ID) {
+    throw new Error('缺少微信小程序配置：WECHAT_APP_ID')
+  }
+
+  if (!process.env.WECHAT_APP_SECRET) {
+    throw new Error('缺少微信小程序配置：WECHAT_APP_SECRET')
+  }
+}
+
 // 导出统一配置
 const env = {
   // 应用配置
@@ -27,6 +38,11 @@ const env = {
     name: process.env.DB_NAME,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD
+  },
+  // 微信小程序配置
+  wechat: {
+    appId: process.env.WECHAT_APP_ID,
+    appSecret: process.env.WECHAT_APP_SECRET
   },
   // JWT配置
   jwt: {

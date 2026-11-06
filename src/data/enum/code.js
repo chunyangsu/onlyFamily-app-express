@@ -13,9 +13,9 @@ const codeEnum = {
   passwordError: 10102,
   mobileExists: 10103,
   emailExists: 10104,
-  accountDisabled: 10105,
-  mobileFormatError: 10106, // 手机号格式不正确
-  loginFailed: 10107 // 手机号或密码错误
+  accountDisabled: 10105
+  // mobileFormatError: 10106, // 手机号格式不正确
+  // loginFailed: 10107 // 手机号或密码错误
 }
 
 module.exports = codeEnum
