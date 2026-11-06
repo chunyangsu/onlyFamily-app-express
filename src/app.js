@@ -1,7 +1,7 @@
 // 注意：必须是整个项目的第一行代码！
 require('module-alias/register')
-// 注意，dotenv 必须在加载 OSS 配置模块之前执行，所以这里先 require('dotenv').config()，再加载 app
-require('dotenv').config()
+// 引入环境变量配置(必须在加载 app 之前执行)
+const env = require('@/config/env')
 
 // 引入express
 const express = require('express')
@@ -13,8 +13,6 @@ const routes = require('@/routes')
 const models = require('@/models')
 // 引入全局错误处理中间件
 const errorMiddleware = require('@/middlewares/errorMiddleware')
-// 引入环境变量配置
-const env = require('@/config/env')
 
 const port = env.app.port
 
@@ -25,6 +23,8 @@ app.use('/api', routes)
 
 // 全局错误处理(必须放在所有中间件和路由的最后)
 app.use(errorMiddleware)
+// 这是express的代理信任配置
+app.set('trust proxy', 1)
 
 // 测试数据库连接
 const startServer = async () => {
