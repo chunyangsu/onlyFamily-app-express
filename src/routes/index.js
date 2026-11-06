@@ -2,11 +2,16 @@
 const express = require('express')
 const path = require('path')
 const autoLoadModules = require('@/utils/autoLoader')
+// 引入鉴权中间件
+const authMiddleware = require('@/middlewares/authMiddleware')
 
 const router = express.Router()
 
 // 递归扫描 routes 目录下的所有文件(除了index.js入口文件)
 const loadedRoutes = autoLoadModules(path.join(__dirname))
+
+// 统一进行 Token 拦截
+router.use(authMiddleware)
 
 loadedRoutes.forEach(({ name, content }) => {
   // 过滤掉index.js
