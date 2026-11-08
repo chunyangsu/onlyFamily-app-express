@@ -26,7 +26,7 @@ const attachmentController = {
    * objectKey：OSS对象key
    */
   addAttachment: asyncHandler(async (req, res) => {
-    const userId = req.headers['user-id']
+    const userId = req.user.id
     const familyId = req.headers['family-id']
     const { attachmentArr } = req.body
     // 校验必传参数

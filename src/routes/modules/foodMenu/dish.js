@@ -1,6 +1,8 @@
 // 菜品管理
 const express = require('express')
 const router = express.Router()
+const validateMiddleware = require('@/middlewares/validateMiddleware')
+const dishValidation = require('@/validations/modules/food/dish')
 const dishController = require('@/controllers/modules/foodMenu/dish')
 const { getDishList, createDish } = dishController
 
@@ -8,6 +10,6 @@ const { getDishList, createDish } = dishController
 router.get('/getList', getDishList)
 
 // 创建菜品
-router.post('/create', createDish)
+router.post('/create', validateMiddleware(dishValidation.create), createDish)
 
 module.exports = router

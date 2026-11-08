@@ -18,7 +18,7 @@ const familyController = {
    * 新增家庭
    */
   createFamily: asyncHandler(async (req, res) => {
-    const userId = req.headers['user-id']
+    const userId = req.user.id
     const { name, introduction } = req.body
     // 校验必传参数
     if (!name || name === '') {
@@ -39,7 +39,7 @@ const familyController = {
    * 加入家庭
    */
   joinFamily: asyncHandler(async (req, res) => {
-    const userId = req.headers['user-id']
+    const userId = req.user.id
     const { familyId } = req.body
     // 校验必传参数
     // if (!name) {
