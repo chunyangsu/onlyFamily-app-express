@@ -1,3 +1,6 @@
+const { fail } = require('@/utils/responseHandler')
+const codeEnum = require('@/data/enum/code')
+
 /**
  * 全局参数验证中间件
  * @param {*} schema Joi定义的参数验证规则
@@ -31,11 +34,12 @@ const validateMiddleware = (schema) => {
           message: val.message
         }))
         // 阻止当前中间件继续执行
-        return res.status(400).json({
-          code: 400,
-          message: '参数验证失败',
-          errorArr
-        })
+        // return res.status(400).json({
+        //   code: 400,
+        //   message: '参数验证失败',
+        //   errorArr
+        // })
+        return fail(res, '参数验证失败', 400, codeEnum.paramInvalid, errorArr)
       }
       // 验证通过，将Joi返回的value保存到validated中
       validated[item] = value

@@ -26,14 +26,15 @@ const responseHandler = {
   /**
    * 失败响应
    * @param {Object} res - 响应对象
-   * @param {string} msg - 错误信息
+   * @param {string} msg - 错误提示文案
    * @param {number} httpStatus - HTTP 状态码
    * @param {number} code - 业务状态码
+   * @param {number} error - 错误信息
    */
-  fail(res, msg = '请求失败', httpStatus = 500, code = codeEnum.unknownError) {
+  fail(res, msg = '请求失败', httpStatus = 500, code = codeEnum.unknownError, error = null) {
     const response = {
       code: code,
-      data: null,
+      data: error,
       msg: msg
     }
     return res.status(httpStatus).json(response)
