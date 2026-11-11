@@ -3,6 +3,8 @@ const dishService = require('@/services/modules/foodMenu/dish')
 const asyncHandler = require('@/utils/asyncHandler')
 // 引入：封装的统一响应工具
 const { success } = require('@/utils/responseHandler')
+const { LOG_MODULE } = require('@/logger/constants')
+const { logBusinessEvent } = require('@/logger/businessLogger')
 
 const dishController = {
   /**
@@ -31,6 +33,17 @@ const dishController = {
     }
     // 调用service中的方法
     const newData = await dishService.createDish(params)
+
+    // 业务操作成功后记录日志
+    logBusinessEvent({
+      req,
+      module: LOG_MODULE.DISH,
+      action: 'create',
+      familyId: 1,
+      targetId: newData.id,
+      message: '新增菜品成功'
+    })
+
     success(res, newData)
   })
 }

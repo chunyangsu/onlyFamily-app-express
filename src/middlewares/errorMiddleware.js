@@ -1,7 +1,8 @@
 // 引入：封装的统一响应工具
 const { fail } = require('@/utils/responseHandler')
 const codeEnum = require('@/data/enum/code')
-const env = require('@/config/env')
+// const env = require('@/config/env')
+const logger = require('@/logger/index')
 
 /**
  * 全局错误处理中间件
@@ -18,32 +19,41 @@ const errorMiddleware = (err, req, res, next) => {
   console.log('name')
   console.log(err.name)
 
-  // 3. 开发环境打印详细错误堆栈，方便排查问题
-  if (env.app.nodeEnv === 'development') {
-    //   console.error(`[${statusCode}] ${message}`)
-    //   console.error(err.stack)
+  // 开发环境打印详细错误堆栈，方便排查问题
+  // if (env.app.nodeEnv === 'development') {
+  //   //   console.error(`[${statusCode}] ${message}`)
+  //   //   console.error(err.stack)
+  // }
+
+  // 如果响应已经发送，交给 Express 默认错误处理机制
+  if (res.headersSent) {
+    return next(err)
   }
 
-  // 2. 处理自定义业务异常 (AppError)
-  // if (err instanceof AppError) {
-  //   return fail(res, err.code, err.message)
-  // }
-
-  // 处理特定类型的错误
-  // if (err.name === 'ValidationError') {
-  //   return error(res, err.message, 400, 400)
-  // }
-
-  // if (err.name === 'UnauthorizedError') {
-  //   return error(res, err.message, 401, 401)
-  // }
-
-  // 错误信息
-  const msg = err.message || '服务器内部错误'
   // http错误状态码
-  const httpStatus = err.status || 500
+  const httpStatus = err.statusCode || err.status || 500
+
+  // 5xx：记录服务端异常及堆栈
+  if (httpStatus >= 500) {
+    logger.error(
+      {
+        type: 'error',
+        requestId: req.id,
+        method: req.method,
+        url: req.originalUrl,
+        httpStatus,
+        userId: req.user?.id,
+        err
+      },
+      '服务器内部错误'
+    )
+  }
+
   // 业务状态码
   const code = err.code || codeEnum.unknownError
+
+  // 4xx：不在这里重复记录，由 requestLogger 记录请求状态
+  const msg = httpStatus >= 500 ? '服务器内部错误' : err.message || '请求处理失败'
 
   // 返回失败响应
   fail(res, msg, httpStatus, code)

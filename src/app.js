@@ -2,20 +2,24 @@
 require('module-alias/register')
 // 引入环境变量配置(必须在加载 app 之前执行)
 const env = require('@/config/env')
-
 // 引入express
 const express = require('express')
-// 创建实例
-const app = express()
 // 引入自动加载的路由入口文件
 const routes = require('@/routes')
 // 引入数据模型层的入口文件
 const models = require('@/models')
 // 引入全局错误处理中间件
 const errorMiddleware = require('@/middlewares/errorMiddleware')
+// HTTP请求日志中间件
+const requestLoggerMiddleware = require('@/logger/requestLoggerMiddleware')
 
 const port = env.app.port
 
+// 创建实例
+const app = express()
+
+// 请求日志中间件(尽可能靠前注册)
+app.use(requestLoggerMiddleware)
 // 解析客户端请求体中的json格式数据，并将它挂载到req.body上
 app.use(express.json())
 // 挂载所有路由，统一加上 /api 前缀
