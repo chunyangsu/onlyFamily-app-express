@@ -84,7 +84,7 @@ const userList = sequelize.define(
   {
     // 核心配置项
     tableName: 'user_list', // 指定数据库中的真实表名
-    timestamps: true, // 开启自动时间戳管理
+    timestamps: false, // 关闭自动时间戳管理
     createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段
     updatedAt: 'updateTime', // 将 updatedAt 映射到 updateTime 字段
     // 生命周期钩子，自动处理 BIGINT 时间戳

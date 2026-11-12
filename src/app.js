@@ -37,14 +37,22 @@ const startServer = async () => {
     await models.sequelize.authenticate()
     // console.log('数据库连接成功')
 
-    // 开发阶段自动同步表结构（生产环境务必注释掉！）
-    await models.sequelize.sync({ alter: true })
+    // 开发环境：自动同步表结构
+    if (env.app.nodeEnv === 'development') {
+      // alter: true 尝试调整已有表结构，使其匹配 Model；不要直接用于生产
+      await models.sequelize.sync({ alter: true })
+    }
+    // 生产环境：创建缺失的数据表
+    // if (env.app.nodeEnv === 'production') {
+    //   // 创建不存在的数据表，不主动删除已有表
+    //   await models.sequelize.sync()
+    // }
   } catch (err) {
     console.error(err.message)
   }
 
   // 数据库就绪后，再启动 HTTP 服务器
-  app.listen(port, () => {
+  app.listen(port, '127.0.0.1', () => {
     console.log('http服务启动了！')
   })
 }
