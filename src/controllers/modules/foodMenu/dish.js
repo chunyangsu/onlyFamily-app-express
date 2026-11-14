@@ -11,7 +11,13 @@ const dishController = {
    * 获取菜品列表
    */
   getDishList: asyncHandler(async (req, res) => {
-    const list = await dishService.getDishList()
+    const { name, categoryIds } = req.query
+    const query = {
+      name,
+      categoryIds,
+      familyId: 1
+    }
+    const list = await dishService.getDishList(query)
     success(res, list)
   }),
 
