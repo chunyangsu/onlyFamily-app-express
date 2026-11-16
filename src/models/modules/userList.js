@@ -36,11 +36,11 @@ const userList = sequelize.define(
       defaultValue: '',
       comment: '用户昵称'
     },
-    attachmentId: {
+    avatarId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
-      comment: '附件id(头像)'
+      comment: '头像(附件id)'
     },
     mobile: {
       type: DataTypes.STRING(20),

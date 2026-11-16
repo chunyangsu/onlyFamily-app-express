@@ -30,6 +30,12 @@ const foodOrderDetails = sequelize.define(
       defaultValue: '', // 默认值为空字符串
       comment: '菜品名称'
     },
+    dishMainImageId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '菜品主图(附件id)'
+    },
     dishCategoryId: {
       type: DataTypes.INTEGER,
       allowNull: false,

@@ -1,5 +1,6 @@
 const { dishCategoryList, dishList, foodOrderList, foodOrderDetails, userList, sequelize } = require('@/models')
 const { generateFoodOrderCode } = require('@/utils/codeRule')
+const { getAttachmentList } = require('@/services/common/attachment')
 
 const foodOrderService = {
   /**
@@ -7,7 +8,7 @@ const foodOrderService = {
    */
   getFoodOrderList: async () => {
     const list = await foodOrderList.findAll({
-      attributes: ['id', 'code', 'createId', 'createTime'],
+      attributes: ['id', 'code', 'progress', 'remark', 'createId', 'createTime'],
       include: [
         {
           model: userList,
@@ -19,16 +20,32 @@ const foodOrderService = {
           // 定义返回时接收的数组别名
           as: 'dishArr',
           // 设置字段别名
-          attributes: [['dishId', 'id'], ['dishName', 'name'], 'price', 'num']
+          attributes: [['dishId', 'id'], ['dishName', 'name'], ['dishMainImageId', 'mainImageId'], 'price', 'num']
         }
       ],
       order: [['createTime', 'DESC']]
     })
-    return list.map((item) => {
-      const data = item.toJSON()
+    const orderList = list.map((item) => item.toJSON())
+    // 批量获取主图 URL，避免逐个菜品查询附件或重复生成签名 URL
+    const mainImageIds = [
+      ...new Set(
+        orderList
+          .flatMap((order) => order.dishArr.map((dish) => dish.mainImageId))
+          .filter((id) => Number(id) > 0)
+          .map(String)
+      )
+    ]
+    const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
+    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+
+    return orderList.map((data) => {
       return {
         ...data,
-        creator: data.creator ? data.creator.name : ''
+        creator: data.creator ? data.creator.name : '',
+        dishArr: data.dishArr.map((dish) => ({
+          ...dish,
+          mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+        }))
       }
     })
   },
@@ -54,7 +71,7 @@ const foodOrderService = {
         const dishIds = [...new Set(data.dishArr.map((item) => item.id))]
         const dishListData = await dishList.findAll({
           where: { id: dishIds },
-          attributes: ['id', 'name', 'categoryId', 'price'],
+          attributes: ['id', 'name', 'mainImageId', 'categoryId', 'price'],
           transaction
         })
         const dishMap = new Map(dishListData.map((dish) => [String(dish.id), dish]))
@@ -77,6 +94,7 @@ const foodOrderService = {
             foodOrderId: masterResult.id, // 食物订单id
             dishId: tempDish.id, // 菜品id
             dishName: tempDish.name, // 菜品名称
+            dishMainImageId: tempDish.mainImageId, // 菜品主图
             dishCategoryId: tempDish.categoryId, // 菜品分类id
             dishCategoryName: categoryMap.get(String(tempDish.categoryId)) || '', // 菜品分类名称
             price: tempDish.price, // 菜品价格

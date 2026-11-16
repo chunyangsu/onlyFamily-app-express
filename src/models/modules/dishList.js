@@ -18,11 +18,11 @@ const dishList = sequelize.define(
       defaultValue: '', // 默认值为空字符串
       comment: '菜品名称'
     },
-    attachmentId: {
+    mainImageId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
-      comment: '附件id(菜品主图)'
+      comment: '菜品主图(附件id)'
     },
     categoryId: {
       type: DataTypes.INTEGER,

@@ -14,7 +14,7 @@ const dishService = {
       // 去重
       categoryIdArr = [...new Set(categoryIdArr)]
     }
-    console.log(categoryIdArr)
+    // console.log(categoryIdArr)
 
     // 2. 构建分类查询条件
     const categoryWhere = {
