@@ -1,5 +1,6 @@
 const { Op } = require('sequelize')
 const { dishCategoryList, dishList } = require('@/models')
+const { getAttachmentList } = require('@/services/common/attachment')
 
 const dishService = {
   /**
@@ -14,7 +15,6 @@ const dishService = {
       // 去重
       categoryIdArr = [...new Set(categoryIdArr)]
     }
-    // console.log(categoryIdArr)
 
     // 2. 构建分类查询条件
     const categoryWhere = {
@@ -55,20 +55,34 @@ const dishService = {
       })
     ])
 
+    // 批量获取主图 URL，避免逐个菜品查询附件或重复生成签名 URL
+    const mainImageIds = [
+      ...new Set(
+        dishes
+          .map((dish) => dish.mainImageId)
+          .filter((id) => Number(id) > 0)
+          .map(String)
+      )
+    ]
+    const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
+    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+    const dishesWithMainImageUrl = dishes.map((dish) => ({
+      ...dish,
+      mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+    }))
+
     // 5. 根据分类ID分组菜品
     const categories = categoryList.map((category) => {
-      const categoryDishes = dishes.filter((dish) => dish.categoryId === category.id)
+      const categoryDishes = dishesWithMainImageUrl.filter((dish) => dish.categoryId === category.id)
 
       return {
         categoryId: category.id,
         categoryName: category.name,
-        // dishCount: categoryDishes.length,
         dishList: categoryDishes
       }
     })
 
     // 6. 搜索时只返回存在匹配菜品的分类
-    // const resultCategories = name?.trim() ? categories.filter((category) => category.dishCount > 0) : categories
     const resultCategories = categories
 
     // 7. 返回结果
@@ -76,7 +90,6 @@ const dishService = {
       total: resultCategories.reduce((total, category) => total + category.dishList.length, 0),
       list: resultCategories
     }
-    // const list = await dishList.findAll()
     return list
   },
   /**

@@ -26,11 +26,11 @@ const dishController = {
    */
   createDish: asyncHandler(async (req, res) => {
     const userId = req.user.id
-    const { name, attachmentId, categoryId, introduction, makeProcess, price } = req.validated.body
+    const { name, mainImageId, categoryId, introduction, makeProcess, price } = req.validated.body
 
     const params = {
       name,
-      attachmentId,
+      mainImageId,
       categoryId,
       introduction,
       makeProcess,
