@@ -10,8 +10,8 @@ const foodOrderController = {
    * 获取食物订单列表
    */
   getFoodOrderList: asyncHandler(async (req, res) => {
-    const list = await foodOrderService.getFoodOrderList()
-    success(res, list)
+    const response = await foodOrderService.getFoodOrderList()
+    success(res, response)
   }),
 
   /**
@@ -30,8 +30,16 @@ const foodOrderController = {
       createId: 1
     }
     // 调用service中的方法
-    const newData = await foodOrderService.createFoodOrder(tempParams)
-    success(res, newData)
+    const response = await foodOrderService.createFoodOrder(tempParams)
+    success(res, response)
+  }),
+  /**
+   * 获取食物订单详情
+   */
+  getFoodOrderDetail: asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const response = await foodOrderService.getFoodOrderDetail(id)
+    success(res, response)
   })
 }
 

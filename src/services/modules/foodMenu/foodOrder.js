@@ -111,6 +111,55 @@ const foodOrderService = {
         return tempBody
       }
     })
+  },
+  /**
+   * 获取食物订单详情
+   * orderId：前端传入的食物订单id
+   * @returns {Promise<Object|null>} 订单详情，订单不存在时返回 null
+   */
+  getFoodOrderDetail: async (orderId) => {
+    const orderInfo = await foodOrderList.findByPk(orderId, {
+      attributes: ['id', 'code', 'progress', 'remark', 'createId', 'createTime'],
+      include: [
+        {
+          model: userList,
+          as: 'creator',
+          attributes: ['name']
+        },
+        {
+          model: foodOrderDetails,
+          // 定义返回时接收的数组别名
+          as: 'dishArr',
+          // 设置字段别名
+          attributes: [['dishId', 'id'], ['dishName', 'name'], ['dishMainImageId', 'mainImageId'], 'price', 'num']
+        }
+      ]
+    })
+    if (!orderInfo) {
+      return null
+    }
+
+    const data = orderInfo.toJSON()
+    // 批量获取主图 URL，避免逐个菜品查询附件或重复生成签名 URL
+    const mainImageIds = [
+      ...new Set(
+        data.dishArr
+          .map((dish) => dish.mainImageId)
+          .filter((id) => Number(id) > 0)
+          .map(String)
+      )
+    ]
+    const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
+    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+
+    return {
+      ...data,
+      creator: data.creator ? data.creator.name : '',
+      dishArr: data.dishArr.map((dish) => ({
+        ...dish,
+        mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+      }))
+    }
   }
 }
 

@@ -6,8 +6,10 @@
 const generateFoodOrderCode = (id) => {
   let tempCode = ''
   if (id > 0) {
-    let codeNumber = id.toString().padStart(8, '0')
-    tempCode = `FO${codeNumber}`
+    const now = new Date()
+    const date = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+    const codeNumber = id.toString().padStart(4, '0')
+    tempCode = `FO${date}${codeNumber}`
   }
   return tempCode
 }

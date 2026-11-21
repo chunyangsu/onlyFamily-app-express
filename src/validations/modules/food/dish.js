@@ -5,7 +5,7 @@ const common = require('@/validations/common/index')
 const create = {
   body: Joi.object({
     name: common.requiredString(50),
-    attachmentId: common.requiredNumber,
+    mainImageId: common.requiredNumber,
     categoryId: common.requiredNumber,
     introduction: common.optionalString(255),
     makeProcess: common.optionalString(2000),
