@@ -67,9 +67,15 @@ const userService = {
    * @param unionid
    */
   createUser: async (openid, unionid) => {
+    const tempNickname =
+      '用户_WJ' +
+      Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, '0')
     const params = {
       openid,
-      unionid: unionid || ''
+      unionid: unionid || '',
+      nickname: tempNickname
     }
     const newData = await userList.create(params)
     return newData

@@ -5,8 +5,52 @@ const { getAttachmentList } = require('@/services/common/attachment')
 const dishService = {
   /**
    * 获取菜品列表
+   * @param {Object} query 查询条件，page 默认1，limit 默认4
    */
-  getDishList: async (query) => {
+  getDishList: async (query = {}) => {
+    const { name, page = 1, limit = 4 } = query
+    const where = {}
+    if (name?.trim()) {
+      where.name = {
+        [Op.like]: `%${name.trim()}%`
+      }
+    }
+
+    const { count, rows: dishes } = await dishList.findAndCountAll({
+      where,
+      order: [
+        ['createTime', 'DESC'],
+        ['id', 'DESC']
+      ],
+      limit: limit,
+      offset: (page - 1) * limit,
+      raw: true
+    })
+
+    // 仅批量获取当前页菜品的主图 URL，避免重复查询附件或生成签名 URL
+    const mainImageIds = [
+      ...new Set(
+        dishes
+          .map((dish) => dish.mainImageId)
+          .filter((id) => Number(id) > 0)
+          .map(String)
+      )
+    ]
+    const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
+    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+
+    return {
+      total: count,
+      list: dishes.map((dish) => ({
+        ...dish,
+        mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+      }))
+    }
+  },
+  /**
+   * 获取菜品列表(按菜品分类分组)
+   */
+  getDishGroupList: async (query) => {
     const { name, categoryIds, familyId } = query
 
     let categoryIdArr = []

@@ -11,13 +11,28 @@ const dishController = {
    * 获取菜品列表
    */
   getDishList: asyncHandler(async (req, res) => {
+    const { name, page, pageSize } = req.validated.query
+    const query = {
+      name,
+      page,
+      pageSize,
+      familyId: 1
+    }
+    const list = await dishService.getDishList(query)
+    success(res, list)
+  }),
+
+  /**
+   * 获取菜品列表(按菜品分类分组)
+   */
+  getDishGroupList: asyncHandler(async (req, res) => {
     const { name, categoryIds } = req.query
     const query = {
       name,
       categoryIds,
       familyId: 1
     }
-    const list = await dishService.getDishList(query)
+    const list = await dishService.getDishGroupList(query)
     success(res, list)
   }),
 

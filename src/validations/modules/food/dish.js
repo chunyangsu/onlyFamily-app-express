@@ -1,6 +1,15 @@
 const Joi = require('joi')
 const common = require('@/validations/common/index')
 
+// 获取菜品列表
+const getList = {
+  query: Joi.object({
+    name: common.optionalString(50),
+    ...common.pagination,
+    pageSize: common.pagination.pageSize.default(4)
+  }).unknown(true)
+}
+
 // 新增菜品
 const create = {
   body: Joi.object({
@@ -14,5 +23,6 @@ const create = {
 }
 
 module.exports = {
+  getList,
   create
 }
