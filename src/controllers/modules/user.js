@@ -64,6 +64,23 @@ const userController = {
     }
     const response = await userService.updateUserAvatar(params)
     success(res, response, '头像绑定成功')
+  }),
+  /**
+   * 更新用户昵称
+   */
+  updateUserNickname: asyncHandler(async (req, res) => {
+    const userId = req.user.id
+    const familyId = req.headers['family-id']
+    const { nickname } = req.validated.body
+
+    // 调用service中的方法
+    const params = {
+      userId,
+      familyId,
+      nickname
+    }
+    const response = await userService.updateUserNickname(params)
+    success(res, response)
   })
 }
 

@@ -8,21 +8,18 @@ const login = {
   }).unknown(false)
 }
 
-// 修改用户资料
-// const updateProfile = {
-//   body: Joi.object({
-//     nickname: common.requiredString(30),
-//     avatar: common.optionalString(500)
-//   }).min(1).unknown(false)
-// }
-
 // 更新用户头像
 const updateUserAvatar = {
   body: Joi.object({ avatarId: common.requiredNumber }).unknown(false)
 }
 
+// 更新用户昵称
+const updateUserNickname = {
+  body: Joi.object({ nickname: common.requiredString(50) }).unknown(false)
+}
+
 module.exports = {
   login,
-  updateUserAvatar
-  // updateProfile
+  updateUserAvatar,
+  updateUserNickname
 }

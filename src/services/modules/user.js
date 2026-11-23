@@ -169,9 +169,36 @@ const userService = {
       if (Number(current.member.userAvatarId) !== ids.avatarId) {
         await current.member.update({ userAvatarId: ids.avatarId }, { transaction })
       }
-      // 托管事务提交成功后，才将头像 ID 和访问地址返回给前端。
-      return { avatarId: ids.avatarId, avatarUrl: avatar.url }
+      // 托管事务提交成功后，才将头像 ID 和访问地址返回给前端
+      const resBody = {
+        avatarId: ids.avatarId,
+        avatarUrl: avatar.url
+      }
+      return resBody
     })
+  },
+  /**
+   * 更新用户昵称
+   * data: userId、familyId、nickname
+   */
+  updateUserNickname: async (data) => {
+    const { userId, familyId, nickname } = data
+    // if (![userId, familyId].every((id) => ['string', 'number'].includes(typeof id) && /^[1-9]\d*$/.test(String(id)) && Number.isSafeInteger(Number(id)))) {
+    //   const error = new Error('用户和家庭 ID 必须为有效正整数')
+    //   error.status = 400
+    //   throw error
+    // }
+    const member = await familyUserMap.findOne({ where: { userId: Number(userId), familyId: Number(familyId) } })
+    if (!member) {
+      const error = new Error('无权修改该家庭下的成员昵称')
+      error.status = 403
+      throw error
+    }
+    await member.update({ nickname })
+    const resBody = {
+      nickname: member.nickname
+    }
+    return resBody
   }
 }
 
