@@ -42,6 +42,12 @@ const attachmentList = sequelize.define(
       defaultValue: '',
       comment: '附件所属模块'
     },
+    moduleType: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: '',
+      comment: '所属模块类型'
+    },
     status: {
       type: DataTypes.STRING(50),
       allowNull: false,

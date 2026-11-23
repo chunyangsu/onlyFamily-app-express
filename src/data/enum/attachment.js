@@ -3,6 +3,8 @@
  */
 
 // 业务所属模块
-const moduleEnum = ['family', 'user', 'dish']
+const moduleEnum = ['user', 'family', 'food']
+// 模块类型
+const moduleTypeEnum = ['avatar', 'dish']
 
-module.exports = moduleEnum
+module.exports = { moduleEnum, moduleTypeEnum }

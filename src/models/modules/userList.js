@@ -30,18 +30,6 @@ const userList = sequelize.define(
       defaultValue: '',
       comment: '姓名'
     },
-    nickname: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-      defaultValue: '',
-      comment: '用户昵称'
-    },
-    avatarId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-      comment: '头像(附件id)'
-    },
     mobile: {
       type: DataTypes.STRING(20),
       allowNull: false,

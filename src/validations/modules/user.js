@@ -16,7 +16,13 @@ const login = {
 //   }).min(1).unknown(false)
 // }
 
+// 更新用户头像
+const updateUserAvatar = {
+  body: Joi.object({ avatarId: common.requiredNumber }).unknown(false)
+}
+
 module.exports = {
-  login
+  login,
+  updateUserAvatar
   // updateProfile
 }

@@ -15,11 +15,12 @@ const ossController = {
    */
   getUploadPolicy: asyncHandler(async (req, res) => {
     const familyId = req.headers['family-id']
-    const { module } = req.body
+    const { module, moduleType } = req.body
 
     const tempParams = {
       familyId,
-      module
+      module,
+      moduleType: moduleType || ''
     }
     // 调用service中的方法
     const newData = await createUploadPolicy(tempParams)

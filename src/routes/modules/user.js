@@ -2,7 +2,9 @@
 const express = require('express')
 const router = express.Router()
 const userController = require('@/controllers/modules/user')
-const { getUserList, login } = userController
+const { login, getUserList, updateUserAvatar } = userController
+const validateMiddleware = require('@/middlewares/validateMiddleware')
+const userValidation = require('@/validations/modules/user')
 
 // ============ 公有接口 ============
 
@@ -19,6 +21,9 @@ router.get('/getList', getUserList)
 
 // 创建用户
 // router.post('/create', createUser)
+
+// 更新用户头像
+router.put('/updateAvatar', validateMiddleware(userValidation.updateUserAvatar), updateUserAvatar)
 
 // 获取单个用户
 // router.get('/:id', (req, res) => {

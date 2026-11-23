@@ -134,7 +134,7 @@ const assertV4Credential = (credential, accessKeyId, date, region) => {
 }
 
 // 创建上传附件的policy
-const createUploadPolicy = async ({ familyId, module }) => {
+const createUploadPolicy = async ({ familyId, module, moduleType }) => {
   assertEndpointRegion(ossConfig.endpoint, ossConfig.region)
 
   const maxFileSize = ossConfig.maxFileSize
@@ -150,7 +150,7 @@ const createUploadPolicy = async ({ familyId, module }) => {
   }
 
   // 使用家庭ID、附件所属模块、年月和随机UUID生成对象路径
-  const objectKey = generateObjectKey({ familyId, module })
+  const objectKey = generateObjectKey({ familyId, module, moduleType })
 
   // 将STS临时权限进一步限制到本次生成的单个对象
   const inlinePolicy = {

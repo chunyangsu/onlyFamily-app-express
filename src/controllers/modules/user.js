@@ -17,18 +17,17 @@ const userController = {
     }
 
     // 调用service中的方法
-    const loginResult = await userService.login(code)
+    const response = await userService.login(code)
     // 返回成功响应
-    success(res, loginResult, '登录成功')
+    success(res, response, '登录成功')
   }),
   /**
    * 获取用户列表
    */
   getUserList: asyncHandler(async (req, res) => {
-    const userList = await userService.getUserList()
-    success(res, userList)
-  })
-
+    const response = await userService.getUserList()
+    success(res, response)
+  }),
   /**
    * 新增用户
    */
@@ -48,6 +47,24 @@ const userController = {
   //   })
   //   success(res, newUser)
   // })
+
+  /**
+   * 更新用户头像
+   */
+  updateUserAvatar: asyncHandler(async (req, res) => {
+    const userId = req.user.id
+    const familyId = req.headers['family-id']
+    const { avatarId } = req.validated.body
+
+    // 调用service中的方法
+    const params = {
+      userId,
+      familyId,
+      avatarId
+    }
+    const response = await userService.updateUserAvatar(params)
+    success(res, response, '头像绑定成功')
+  })
 }
 
 module.exports = userController

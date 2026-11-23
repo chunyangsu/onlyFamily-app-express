@@ -18,11 +18,11 @@ const familyList = sequelize.define(
       defaultValue: '', // 默认值为空字符串
       comment: '家庭名称'
     },
-    attachmentId: {
+    avatarId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
-      comment: '附件id(头像)'
+      comment: '家庭头像'
     },
     introduction: {
       type: DataTypes.STRING(255),

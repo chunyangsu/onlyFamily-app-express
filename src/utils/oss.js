@@ -1,5 +1,5 @@
 const crypto = require('node:crypto')
-const moduleEnum = require('@/data/enum/attachment')
+const { moduleEnum, moduleTypeEnum } = require('@/data/enum/attachment')
 
 // todo：校验家庭id
 // function validateFamilyId(familyId) {
@@ -23,10 +23,21 @@ const validateModule = (module) => {
   return module
 }
 
+// 校验附件所属业务模块
+const validateModuleType = (moduleType) => {
+  if (!moduleTypeEnum.includes(moduleType)) {
+    const error = new Error('附件模块类型不存在，请确认后重新上传')
+    error.status = 400
+    throw error
+  }
+  return moduleType
+}
+
 // 生成 ObjectKey
-const generateObjectKey = ({ familyId, module }) => {
+const generateObjectKey = ({ familyId, module, moduleType }) => {
   // const safeFamilyId = validateFamilyId(familyId)
   const safeModule = validateModule(module)
+  const safeModuleType = validateModuleType(moduleType)
 
   const now = new Date()
   const year = now.getUTCFullYear()
@@ -34,6 +45,9 @@ const generateObjectKey = ({ familyId, module }) => {
   // 这里使用随机 UUID，避免客户端控制对象路径
   // todo：后续正式接入用户认证时，路径还应包含经过认证的 userId
   const uuid = crypto.randomUUID()
+  if (moduleType !== '') {
+    return [`family_${familyId}`, safeModule, safeModuleType, year, month, `${uuid}`].join('/')
+  }
   return [`family_${familyId}`, safeModule, year, month, `${uuid}`].join('/')
 }
 

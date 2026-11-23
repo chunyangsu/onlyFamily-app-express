@@ -5,7 +5,7 @@ const { getOssUrl } = require('@/config/oss')
 const attachmentService = {
   /**
    * 获取附件列表
-   * idArr：附件id数组
+   * idArr
    */
   getAttachmentList: async (idArr) => {
     // 去重，避免重复查询；后续仍可按原始 ids 顺序组装
@@ -17,7 +17,7 @@ const attachmentService = {
           [Op.in]: tempIdArr
         }
       },
-      attributes: ['id', 'objectKey', 'module'],
+      attributes: ['id', 'objectKey', 'module', 'moduleType'],
       raw: true
     })
 
@@ -33,6 +33,7 @@ const attachmentService = {
             id,
             objectKey: null,
             module: null,
+            moduleType: null,
             url: null
           }
         }
@@ -41,6 +42,7 @@ const attachmentService = {
           id: attachment.id,
           objectKey: attachment.objectKey,
           module: attachment.module,
+          moduleType: attachment.moduleType,
           url
         }
       })

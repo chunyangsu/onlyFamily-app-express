@@ -24,6 +24,18 @@ const familyUserMap = sequelize.define(
       defaultValue: 0,
       comment: '用户id'
     },
+    nickname: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: '',
+      comment: '用户昵称'
+    },
+    userAvatarId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '用户头像'
+    },
     role: {
       type: DataTypes.TINYINT.UNSIGNED,
       allowNull: false,

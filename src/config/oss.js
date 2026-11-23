@@ -80,10 +80,17 @@ async function getOssUrl(objectKey, expires = 300) {
     throw new Error('签名 URL 有效期必须是正整数')
   }
 
-  const credentials = await getRoleCredentials()
+  const ossClient = await getOssReadClient()
 
-  // 使用角色临时凭证创建 OSS 客户端
-  const ossClient = new OSS({
+  return ossClient.signatureUrl(objectKey.trim(), {
+    expires
+  })
+}
+
+// 复用读取角色凭证，供服务端验证对象，不向前端暴露凭证
+async function getOssReadClient() {
+  const credentials = await getRoleCredentials()
+  return new OSS({
     region: ossConfig.region,
     endpoint: ossConfig.endpoint,
     bucket: ossConfig.bucket,
@@ -92,15 +99,12 @@ async function getOssUrl(objectKey, expires = 300) {
     stsToken: credentials.SecurityToken,
     secure: true
   })
-
-  return ossClient.signatureUrl(objectKey.trim(), {
-    expires
-  })
 }
 
 module.exports = {
   ossConfig,
   stsClient,
   normalizeSigningRegion,
-  getOssUrl
+  getOssUrl,
+  getOssReadClient
 }
