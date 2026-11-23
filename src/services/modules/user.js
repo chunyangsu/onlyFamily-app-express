@@ -52,16 +52,35 @@ const userService = {
     const token = generateToken(user.id)
 
     // 8. 生成返回数据：token和用户信息
-    const resInfo = {
+    const resBody = {
       token: token,
       userInfo: {
-        id: user.id
-        // nickname: user.nickname,
-        // avatarId: user.avatarId,
-        // avatarUrl: ''
+        id: user.id,
+        familyId: 0,
+        avatarId: 0,
+        avatarUrl: '',
+        nickname: ''
       }
     }
-    return resInfo
+    // 只有一个关联家庭时，自动使用该家庭下的成员资料。
+    // 只需区分 0、1、多个，最多查询两条即可。
+    const members = await familyUserMap.findAll({
+      where: { userId: user.id },
+      attributes: ['familyId', 'nickname', 'userAvatarId'],
+      limit: 2,
+      raw: true
+    })
+    if (members.length === 1) {
+      const member = members[0]
+      resBody.userInfo.familyId = member.familyId
+      resBody.userInfo.nickname = member.nickname || ''
+      resBody.userInfo.avatarId = member.userAvatarId || 0
+      if (resBody.userInfo.avatarId) {
+        const [avatar] = await getAttachmentList([resBody.userInfo.avatarId])
+        resBody.userInfo.avatarUrl = avatar?.url || ''
+      }
+    }
+    return resBody
   },
   /**
    * 注册(创建)用户
