@@ -68,10 +68,10 @@ async function getRoleCredentials() {
 /**
  * 获取 OSS 对象的临时签名访问 URL
  * @param {string} objectKey OSS 对象完整路径
- * @param {number} expires 有效期，单位秒，默认300秒(5分钟)
+ * @param {number} expires 有效期，单位秒，默认3600秒(1小时)
  * @returns {string} 签名访问 URL
  */
-async function getOssUrl(objectKey, expires = 300) {
+async function getOssUrl(objectKey, expires = 3600) {
   if (typeof objectKey !== 'string' || !objectKey.trim()) {
     throw new Error('objectKey 不能为空')
   }
