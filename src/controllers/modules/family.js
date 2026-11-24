@@ -52,6 +52,31 @@ const familyController = {
     // 调用service中的方法
     const newData = await familyService.joinFamily(params)
     success(res, newData)
+  }),
+  /**
+   * 获取家庭详情
+   */
+  getFamilyDetail: asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const response = await familyService.getFamilyDetail(id)
+    success(res, response)
+  }),
+  /**
+   * 更新家庭头像
+   */
+  updateFamilyAvatar: asyncHandler(async (req, res) => {
+    const userId = req.user.id
+    const familyId = req.headers['family-id']
+    const { avatarId } = req.validated.body
+
+    const params = {
+      userId,
+      familyId,
+      avatarId
+    }
+    // 调用service中的方法
+    const resBody = await familyService.updateFamilyAvatar(params)
+    success(res, resBody)
   })
 }
 

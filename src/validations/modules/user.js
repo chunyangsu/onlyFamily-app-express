@@ -10,7 +10,7 @@ const login = {
 
 // 更新用户头像
 const updateUserAvatar = {
-  body: Joi.object({ avatarId: common.requiredNumber }).unknown(false)
+  body: Joi.object({ avatarId: common.requiredNumber.max(2147483647) }).unknown(false)
 }
 
 // 更新用户昵称

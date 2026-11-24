@@ -28,12 +28,6 @@ router.put('/updateAvatar', validateMiddleware(userValidation.updateUserAvatar),
 // 更新用户昵称
 router.put('/updateNickname', validateMiddleware(userValidation.updateUserNickname), updateUserNickname)
 
-// 获取单个用户
-// router.get('/:id', (req, res) => {
-//   const { id } = req.params
-//   res.json({ message: `获取用户 ${id}`, data: {} })
-// })
-
 // 获取客户详情的路由
 // router.get('/customer/detail/:id', getCustomerDetail)
 

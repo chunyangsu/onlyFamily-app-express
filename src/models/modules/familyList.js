@@ -36,12 +36,24 @@ const familyList = sequelize.define(
       defaultValue: 'normal',
       comment: '状态'
     },
+    createId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '创建人id'
+    },
     // 创建时间 (映射为 createTime，使用 BIGINT 时间戳)
     createTime: {
       type: DataTypes.BIGINT,
       allowNull: false,
       defaultValue: 0,
       comment: '创建时间'
+    },
+    updateId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '更新人id'
     },
     // 更新时间 (映射为 updateTime，使用 BIGINT 时间戳)
     updateTime: {
