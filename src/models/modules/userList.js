@@ -15,7 +15,6 @@ const userList = sequelize.define(
     openid: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: true, // 是否唯一
       comment: '微信用户唯一标识'
     },
     unionid: {
@@ -71,6 +70,7 @@ const userList = sequelize.define(
   },
   {
     // 核心配置项
+    indexes: [{ name: 'openid', unique: true, fields: ['openid'] }],
     tableName: 'user_list', // 指定数据库中的真实表名
     timestamps: false, // 关闭自动时间戳管理
     createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段

@@ -48,7 +48,10 @@ const startServer = async () => {
     //   await models.sequelize.sync()
     // }
   } catch (err) {
-    console.error(err.message)
+    console.error('数据库初始化失败，停止启动 HTTP 服务：', err)
+    process.exitCode = 1
+    await models.sequelize.close().catch((closeError) => console.error(closeError))
+    return
   }
 
   // 数据库就绪后，再启动 HTTP 服务器
