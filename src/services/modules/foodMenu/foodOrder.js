@@ -1,4 +1,4 @@
-const { dishCategoryList, dishList, foodOrderList, foodOrderDetails, userList, sequelize } = require('@/models')
+const { dishCategoryList, dishList, foodOrderList, foodOrderDetails, familyUserMap, sequelize } = require('@/models')
 const { generateFoodOrderCode } = require('@/utils/codeRule')
 const { getAttachmentList } = require('@/services/common/attachment')
 
@@ -6,15 +6,15 @@ const foodOrderService = {
   /**
    * 获取食物订单列表
    */
-  getFoodOrderList: async () => {
+  getFoodOrderList: async (familyId) => {
+    if (!['string', 'number'].includes(typeof familyId) || !/^[1-9]\d*$/.test(String(familyId)) || !Number.isSafeInteger(Number(familyId)) || Number(familyId) > 2147483647) {
+      const error = new Error('家庭 ID 必须为有效正整数')
+      error.status = 400
+      throw error
+    }
     const list = await foodOrderList.findAll({
       attributes: ['id', 'code', 'progress', 'remark', 'createId', 'createTime'],
       include: [
-        {
-          model: userList,
-          as: 'creator',
-          attributes: ['name']
-        },
         {
           model: foodOrderDetails,
           // 定义返回时接收的数组别名
@@ -26,6 +26,16 @@ const foodOrderService = {
       order: [['createTime', 'DESC']]
     })
     const orderList = list.map((item) => item.toJSON())
+    // 同一用户在不同家庭的昵称、头像独立，必须限定当前家庭。
+    const createIds = [...new Set(orderList.map((order) => String(order.createId)))]
+    const members = createIds.length
+      ? await familyUserMap.findAll({
+          where: { familyId: Number(familyId), userId: createIds },
+          attributes: ['userId', 'nickname', 'userAvatarId'],
+          raw: true
+        })
+      : []
+    const memberMap = new Map(members.map((member) => [String(member.userId), member]))
     // 批量获取主图 URL，避免逐个菜品查询附件或重复生成签名 URL
     const mainImageIds = [
       ...new Set(
@@ -35,13 +45,29 @@ const foodOrderService = {
           .map(String)
       )
     ]
-    const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
+    const attachmentIds = [
+      ...new Set([
+        ...mainImageIds,
+        ...members
+          .map((member) => member.userAvatarId)
+          .filter((id) => Number(id) > 0)
+          .map(String)
+      ])
+    ]
+    const attachments = attachmentIds.length ? await getAttachmentList(attachmentIds) : []
     const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
 
     return orderList.map((data) => {
+      const member = memberMap.get(String(data.createId))
+      const avatarId = member?.userAvatarId || 0
       return {
         ...data,
-        creator: data.creator ? data.creator.name : '',
+        createUser: {
+          id: data.createId,
+          nickname: member?.nickname || '',
+          avatarId,
+          avatarUrl: Number(avatarId) > 0 ? mainImageUrlMap.get(String(avatarId)) || '' : ''
+        },
         dishArr: data.dishArr.map((dish) => ({
           ...dish,
           mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
@@ -114,18 +140,19 @@ const foodOrderService = {
   },
   /**
    * 获取食物订单详情
-   * orderId：前端传入的食物订单id
+   * data：familyId、id
    * @returns {Promise<Object|null>} 订单详情，订单不存在时返回 null
    */
-  getFoodOrderDetail: async (orderId) => {
-    const orderInfo = await foodOrderList.findByPk(orderId, {
+  getFoodOrderDetail: async (data) => {
+    const { familyId, id } = data
+    if (!['string', 'number'].includes(typeof familyId) || !/^[1-9]\d*$/.test(String(familyId)) || !Number.isSafeInteger(Number(familyId)) || Number(familyId) > 2147483647) {
+      const error = new Error('家庭 ID 必须为有效正整数')
+      error.status = 400
+      throw error
+    }
+    const orderInfo = await foodOrderList.findByPk(id, {
       attributes: ['id', 'code', 'progress', 'remark', 'createId', 'createTime'],
       include: [
-        {
-          model: userList,
-          as: 'creator',
-          attributes: ['name']
-        },
         {
           model: foodOrderDetails,
           // 定义返回时接收的数组别名
@@ -139,23 +166,35 @@ const foodOrderService = {
       return null
     }
 
-    const data = orderInfo.toJSON()
+    const tempData = orderInfo.toJSON()
+    const member = await familyUserMap.findOne({
+      where: { familyId: Number(familyId), userId: tempData.createId },
+      attributes: ['userId', 'nickname', 'userAvatarId'],
+      raw: true
+    })
+    const avatarId = member?.userAvatarId || 0
     // 批量获取主图 URL，避免逐个菜品查询附件或重复生成签名 URL
     const mainImageIds = [
       ...new Set(
-        data.dishArr
+        tempData.dishArr
           .map((dish) => dish.mainImageId)
           .filter((id) => Number(id) > 0)
           .map(String)
       )
     ]
-    const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
+    const attachmentIds = [...new Set([...mainImageIds, ...(Number(avatarId) > 0 ? [String(avatarId)] : [])])]
+    const attachments = attachmentIds.length ? await getAttachmentList(attachmentIds) : []
     const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
 
     return {
-      ...data,
-      creator: data.creator ? data.creator.name : '',
-      dishArr: data.dishArr.map((dish) => ({
+      ...tempData,
+      createUser: {
+        id: tempData.createId,
+        nickname: member?.nickname || '',
+        avatarId,
+        avatarUrl: Number(avatarId) > 0 ? mainImageUrlMap.get(String(avatarId)) || '' : ''
+      },
+      dishArr: tempData.dishArr.map((dish) => ({
         ...dish,
         mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
       }))

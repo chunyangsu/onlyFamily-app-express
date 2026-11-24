@@ -10,7 +10,8 @@ const foodOrderController = {
    * 获取食物订单列表
    */
   getFoodOrderList: asyncHandler(async (req, res) => {
-    const response = await foodOrderService.getFoodOrderList()
+    const familyId = req.headers['family-id']
+    const response = await foodOrderService.getFoodOrderList(familyId)
     success(res, response)
   }),
 
@@ -37,8 +38,13 @@ const foodOrderController = {
    * 获取食物订单详情
    */
   getFoodOrderDetail: asyncHandler(async (req, res) => {
+    const familyId = req.headers['family-id']
     const { id } = req.params
-    const response = await foodOrderService.getFoodOrderDetail(id)
+    const params = {
+      familyId,
+      id
+    }
+    const response = await foodOrderService.getFoodOrderDetail(params)
     success(res, response)
   })
 }
