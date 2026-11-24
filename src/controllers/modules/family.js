@@ -62,6 +62,14 @@ const familyController = {
     success(res, response)
   }),
   /**
+   * 获取家庭成员列表
+   */
+  getFamilyMemberList: asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const response = await familyService.getFamilyMemberList(id)
+    success(res, response)
+  }),
+  /**
    * 更新家庭头像
    */
   updateFamilyAvatar: asyncHandler(async (req, res) => {

@@ -78,6 +78,35 @@ const familyService = {
     return resBody
   },
   /**
+   * 获取家庭成员列表
+   * id：前端传入的家庭id
+   * @returns
+   */
+  getFamilyMemberList: async (id) => {
+    const members = await familyUserMap.findAll({
+      where: { familyId: id },
+      attributes: ['userId', 'nickname', 'userAvatarId'],
+      raw: true
+    })
+    const avatarIds = [
+      ...new Set(
+        members
+          .map((member) => member.userAvatarId)
+          .filter((avatarId) => Number(avatarId) > 0)
+          .map(String)
+      )
+    ]
+    const attachments = avatarIds.length ? await getAttachmentList(avatarIds) : []
+    const avatarUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+
+    return members.map((member) => ({
+      id: member.userId,
+      nickname: member.nickname,
+      avatarId: member.userAvatarId || 0,
+      avatarUrl: avatarUrlMap.get(String(member.userAvatarId)) || ''
+    }))
+  },
+  /**
    * 更新家庭头像
    * data: userId、familyId、avatarId
    */
