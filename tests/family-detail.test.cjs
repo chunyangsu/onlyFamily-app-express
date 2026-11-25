@@ -20,7 +20,7 @@ function fixture({ family, avatarUrl = 'https://example.com/signed-family-avatar
       async getAttachmentList(ids) {
         calls.attachments.push(Array.from(ids))
         if (attachmentError) throw attachmentError
-        return [{ id: ids[0], url: avatarUrl }]
+        return [{ id: ids[0], url: avatarUrl, urlExpiresAt: 1795608000000 }]
       }
     }
   }
@@ -43,7 +43,7 @@ test('家庭详情返回查询字段，存在 avatarId 时获取对应签名 URL
   const result = await service.getFamilyDetail('2')
   assert.equal(
     JSON.stringify(result),
-    JSON.stringify({ id: 2, name: '我的家庭', introduction: '家庭简介', avatarId: 7, avatarUrl: 'https://example.com/signed-family-avatar', createId: 1, createTime: 123456 })
+    JSON.stringify({ id: 2, name: '我的家庭', introduction: '家庭简介', avatarId: 7, avatarUrl: 'https://example.com/signed-family-avatar', urlExpiresAt: 1795608000000, createId: 1, createTime: 123456 })
   )
   assert.equal(calls.details[0].id, '2')
   assert.equal(JSON.stringify(calls.details[0].options.attributes), JSON.stringify(['id', 'name', 'introduction', 'avatarId', 'createId', 'createTime']))
@@ -55,6 +55,7 @@ test('家庭没有头像时返回空 URL，不查询附件', async () => {
   const result = await service.getFamilyDetail(2)
   assert.equal(result.avatarId, 0)
   assert.equal(result.avatarUrl, '')
+  assert.equal(result.urlExpiresAt, null)
   assert.equal(calls.attachments.length, 0)
 })
 

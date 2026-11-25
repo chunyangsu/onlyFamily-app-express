@@ -37,13 +37,14 @@ const dishService = {
       )
     ]
     const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
-    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+    const attachmentMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment]))
 
     return {
       total: count,
       list: dishes.map((dish) => ({
         ...dish,
-        mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+        mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
+        urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
       }))
     }
   },
@@ -109,10 +110,11 @@ const dishService = {
       )
     ]
     const attachments = mainImageIds.length ? await getAttachmentList(mainImageIds) : []
-    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+    const attachmentMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment]))
     const dishesWithMainImageUrl = dishes.map((dish) => ({
       ...dish,
-      mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+      mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
+      urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
     }))
 
     // 5. 根据分类ID分组菜品

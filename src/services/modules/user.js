@@ -59,6 +59,7 @@ const userService = {
         familyId: 0,
         avatarId: 0,
         avatarUrl: '',
+        urlExpiresAt: null,
         nickname: ''
       }
     }
@@ -78,6 +79,7 @@ const userService = {
       if (resBody.userInfo.avatarId) {
         const [avatar] = await getAttachmentList([resBody.userInfo.avatarId])
         resBody.userInfo.avatarUrl = avatar?.url || ''
+        resBody.userInfo.urlExpiresAt = avatar?.url ? (avatar.urlExpiresAt ?? null) : null
       }
     }
     return resBody
@@ -172,7 +174,8 @@ const userService = {
       // 托管事务提交成功后，才将头像 ID 和访问地址返回给前端
       const resBody = {
         avatarId: ids.avatarId,
-        avatarUrl: avatar.url
+        avatarUrl: avatar.url,
+        urlExpiresAt: avatar.urlExpiresAt ?? null
       }
       return resBody
     })

@@ -54,7 +54,7 @@ test('按当前家庭和创建人批量读取资料，去重获取头像与菜�
       { userId: 3, nickname: '乙', userAvatarId: 9 }
     ],
     attachments: [
-      { id: '7', url: 'url7' },
+      { id: '7', url: 'url7', urlExpiresAt: 1795608000000 },
       { id: 8, url: 'url8' },
       { id: 9, url: 'url9' }
     ]
@@ -68,10 +68,11 @@ test('按当前家庭和创建人批量读取资料，去重获取头像与菜�
   assert.deepEqual(calls.attachments, [['7', '8', '9']])
   assert.equal(calls.orders[0].include.length, 1)
   assert.equal(calls.orders[0].include[0].as, 'dishArr')
-  assert.deepEqual(plain(result[0].createUser), { id: 2, nickname: '家庭昵称', avatarId: 7, avatarUrl: 'url7' })
+  assert.deepEqual(plain(result[0].createUser), { id: 2, nickname: '家庭昵称', avatarId: 7, avatarUrl: 'url7', urlExpiresAt: 1795608000000 })
   assert.equal(result[1].createUser.nickname, '家庭昵称')
   assert.equal(result[2].createUser.avatarUrl, 'url9')
   assert.equal(result[0].dishArr[0].mainImageUrl, 'url7')
+  assert.equal(result[0].dishArr[0].urlExpiresAt, 1795608000000)
   assert.equal(result[0].dishArr[0].price, '10.00')
   assert.ok(result.every((order) => !Object.hasOwn(order, 'creator')))
 })
@@ -89,8 +90,8 @@ test('空订单不查询成员或附件，无头像和成员缺失时返回默�
     members: [{ userId: 2, nickname: '甲', userAvatarId: 0 }]
   })
   const result = await service.getFoodOrderList(1)
-  assert.deepEqual(plain(result[0].createUser), { id: 2, nickname: '甲', avatarId: 0, avatarUrl: '' })
-  assert.deepEqual(plain(result[1].createUser), { id: 3, nickname: '', avatarId: 0, avatarUrl: '' })
+  assert.deepEqual(plain(result[0].createUser), { id: 2, nickname: '甲', avatarId: 0, avatarUrl: '', urlExpiresAt: null })
+  assert.deepEqual(plain(result[1].createUser), { id: 3, nickname: '', avatarId: 0, avatarUrl: '', urlExpiresAt: null })
   assert.equal(calls.attachments.length, 0)
 })
 

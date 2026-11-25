@@ -55,7 +55,7 @@ const foodOrderService = {
       ])
     ]
     const attachments = attachmentIds.length ? await getAttachmentList(attachmentIds) : []
-    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+    const attachmentMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment]))
 
     return orderList.map((data) => {
       const member = memberMap.get(String(data.createId))
@@ -66,11 +66,13 @@ const foodOrderService = {
           id: data.createId,
           nickname: member?.nickname || '',
           avatarId,
-          avatarUrl: Number(avatarId) > 0 ? mainImageUrlMap.get(String(avatarId)) || '' : ''
+          avatarUrl: Number(avatarId) > 0 ? attachmentMap.get(String(avatarId))?.url || '' : '',
+          urlExpiresAt: Number(avatarId) > 0 && attachmentMap.get(String(avatarId))?.url ? (attachmentMap.get(String(avatarId)).urlExpiresAt ?? null) : null
         },
         dishArr: data.dishArr.map((dish) => ({
           ...dish,
-          mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+          mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
+          urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
         }))
       }
     })
@@ -184,7 +186,7 @@ const foodOrderService = {
     ]
     const attachmentIds = [...new Set([...mainImageIds, ...(Number(avatarId) > 0 ? [String(avatarId)] : [])])]
     const attachments = attachmentIds.length ? await getAttachmentList(attachmentIds) : []
-    const mainImageUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+    const attachmentMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment]))
 
     return {
       ...tempData,
@@ -192,11 +194,13 @@ const foodOrderService = {
         id: tempData.createId,
         nickname: member?.nickname || '',
         avatarId,
-        avatarUrl: Number(avatarId) > 0 ? mainImageUrlMap.get(String(avatarId)) || '' : ''
+        avatarUrl: Number(avatarId) > 0 ? attachmentMap.get(String(avatarId))?.url || '' : '',
+        urlExpiresAt: Number(avatarId) > 0 && attachmentMap.get(String(avatarId))?.url ? (attachmentMap.get(String(avatarId)).urlExpiresAt ?? null) : null
       },
       dishArr: tempData.dishArr.map((dish) => ({
         ...dish,
-        mainImageUrl: mainImageUrlMap.get(String(dish.mainImageId)) ?? ''
+        mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
+        urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
       }))
     }
   }

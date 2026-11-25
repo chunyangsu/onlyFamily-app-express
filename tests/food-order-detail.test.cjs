@@ -47,8 +47,8 @@ test('detail returns family-specific createUser alongside dishes without creator
     order: { id: 1, code: 'ORDER1', createId: 2, dishArr: [{ id: 11, mainImageId: 7, price: '10.00', num: 2 }] },
     member: { userId: 2, nickname: 'Family nickname', userAvatarId: '8' },
     attachments: [
-      { id: '7', url: 'dish-url' },
-      { id: 8, url: 'avatar-url' }
+      { id: '7', url: 'dish-url', urlExpiresAt: 1795608000000 },
+      { id: 8, url: 'avatar-url', urlExpiresAt: 1795608000000 }
     ]
   })
   const result = await service.getFoodOrderDetail({ familyId: '6', id: '1' })
@@ -61,8 +61,9 @@ test('detail returns family-specific createUser alongside dishes without creator
   assert.deepEqual(calls.attachments, [['7', '8']])
   assert.equal(calls.orders[0].query.include.length, 1)
   assert.equal(calls.orders[0].query.include[0].as, 'dishArr')
-  assert.deepEqual(plain(result.createUser), { id: 2, nickname: 'Family nickname', avatarId: '8', avatarUrl: 'avatar-url' })
+  assert.deepEqual(plain(result.createUser), { id: 2, nickname: 'Family nickname', avatarId: '8', avatarUrl: 'avatar-url', urlExpiresAt: 1795608000000 })
   assert.equal(result.dishArr[0].mainImageUrl, 'dish-url')
+  assert.equal(result.dishArr[0].urlExpiresAt, 1795608000000)
   assert.equal(result.dishArr[0].price, '10.00')
   assert.equal(result.code, 'ORDER1')
   assert.equal(Object.hasOwn(result, 'creator'), false)
@@ -79,7 +80,7 @@ test('missing member or avatar returns defaults without an unnecessary attachmen
   for (const member of [null, { nickname: 'Name', userAvatarId: 0 }]) {
     const { service, calls } = fixture({ order: { createId: 2, dishArr: [] }, member })
     const result = await service.getFoodOrderDetail({ familyId: 1, id: 1 })
-    assert.deepEqual(plain(result.createUser), { id: 2, nickname: member?.nickname || '', avatarId: 0, avatarUrl: '' })
+    assert.deepEqual(plain(result.createUser), { id: 2, nickname: member?.nickname || '', avatarId: 0, avatarUrl: '', urlExpiresAt: null })
     assert.equal(calls.attachments.length, 0)
   }
 })

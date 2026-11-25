@@ -46,7 +46,7 @@ test('按家庭 ID 查询全部成员，映射用户 ID、家庭昵称及头像�
     ],
     attachments: [
       { id: '8', url: 'avatar-8' },
-      { id: 7, url: 'avatar-7' }
+      { id: 7, url: 'avatar-7', urlExpiresAt: 1795608000000 }
     ]
   })
   const result = await service.getFamilyMemberList('2')
@@ -56,10 +56,10 @@ test('按家庭 ID 查询全部成员，映射用户 ID、家庭昵称及头像�
   assert.equal(calls.queries[0].limit, undefined)
   assert.deepEqual(calls.attachments, [['7', '8']])
   assert.deepEqual(JSON.parse(JSON.stringify(result)), [
-    { id: 1, nickname: '成员甲', avatarId: 7, avatarUrl: 'avatar-7' },
-    { id: 2, nickname: '成员乙', avatarId: '7', avatarUrl: 'avatar-7' },
-    { id: 3, nickname: '成员丙', avatarId: 8, avatarUrl: 'avatar-8' },
-    { id: 4, nickname: '', avatarId: 0, avatarUrl: '' }
+    { id: 1, nickname: '成员甲', avatarId: 7, avatarUrl: 'avatar-7', urlExpiresAt: 1795608000000 },
+    { id: 2, nickname: '成员乙', avatarId: '7', avatarUrl: 'avatar-7', urlExpiresAt: 1795608000000 },
+    { id: 3, nickname: '成员丙', avatarId: 8, avatarUrl: 'avatar-8', urlExpiresAt: null },
+    { id: 4, nickname: '', avatarId: 0, avatarUrl: '', urlExpiresAt: null }
   ])
 })
 

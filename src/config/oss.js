@@ -28,9 +28,18 @@ const ossConfig = {
   accessKeyId: env.oss.accessKeyId,
   accessKeySecret: env.oss.accessKeySecret,
   roleArn: env.oss.roleArn,
+  readStsTtl: env.oss.readStsTtl,
+  readUrlTtl: env.oss.readUrlTtl,
   maxFileSize: Number(env.oss.uploadMaxSize),
   policyTtl: Number(env.oss.uploadPolicyTtl)
 }
+
+// if (!Number.isInteger(ossConfig.readStsTtl) || ossConfig.readStsTtl < 900 || ossConfig.readStsTtl > 43200) {
+//   throw new Error('OSS_READ_STS_TTL 必须是 900 到 43200 之间的整数秒数')
+// }
+// if (!Number.isInteger(ossConfig.readUrlTtl) || ossConfig.readUrlTtl <= 0 || ossConfig.readUrlTtl > ossConfig.readStsTtl) {
+//   throw new Error('OSS_READ_URL_TTL 必须是正整数且不能超过 OSS_READ_STS_TTL')
+// }
 
 // STS客户端：用于获取附件上传所需的临时凭证
 const stsClient = new OSS.STS({
@@ -40,56 +49,91 @@ const stsClient = new OSS.STS({
 
 // OSS 角色临时凭证缓存
 let roleCredentialsCache = null
+let roleCredentialsRefreshPromise = null
 
-// 提前 5 分钟刷新凭证，避免接近过期时间时生成 URL
-const CREDENTIAL_REFRESH_BEFORE_MS = 5 * 60 * 1000
+// 满时长 URL 使用最近约 5 分钟内申请的凭证，兼顾接近 12 小时的有效期与缓存复用。
+const CREDENTIAL_REUSE_WINDOW_SECONDS = 5 * 60
+const CREDENTIAL_REFRESH_BEFORE_SECONDS = 5 * 60
+const URL_SAFETY_SECONDS = 60
 
 /**
  * 获取用于读取 OSS 对象的角色临时凭证
  */
-async function getRoleCredentials() {
-  const now = Date.now()
-  if (roleCredentialsCache && roleCredentialsCache.expiration - now > CREDENTIAL_REFRESH_BEFORE_MS) {
-    return roleCredentialsCache.credentials
+async function getRoleCredentials(minRemainingSeconds = CREDENTIAL_REFRESH_BEFORE_SECONDS) {
+  if (roleCredentialsCache && roleCredentialsCache.expiration - Date.now() > minRemainingSeconds * 1000) {
+    return roleCredentialsCache
   }
-  // 使用现有长期 RAM 用户凭证扮演指定角色
-  const result = await stsClient.assumeRole(ossConfig.roleArn, '', '3600', 'onlyFamilyReadAttachment')
-  const credentials = result.credentials
-  if (!credentials || !credentials.AccessKeyId || !credentials.AccessKeySecret || !credentials.SecurityToken || !credentials.Expiration) {
-    throw new Error('获取 OSS 角色临时凭证失败')
+  // 批量签名和文件验证共用刷新任务；失败时清除任务，允许后续请求重试。
+  if (!roleCredentialsRefreshPromise) {
+    roleCredentialsRefreshPromise = (async () => {
+      const result = await stsClient.assumeRole(ossConfig.roleArn, '', ossConfig.readStsTtl, 'onlyFamilyReadAttachment')
+      const credentials = result.credentials
+      const expiration = Date.parse(credentials?.Expiration)
+      if (!credentials?.AccessKeyId || !credentials.AccessKeySecret || !credentials.SecurityToken || !Number.isFinite(expiration) || expiration - Date.now() <= URL_SAFETY_SECONDS * 1000) {
+        throw new Error('获取 OSS 角色临时凭证失败或凭证有效期不足')
+      }
+      roleCredentialsCache = { credentials, expiration }
+      return roleCredentialsCache
+    })().finally(() => {
+      roleCredentialsRefreshPromise = null
+    })
   }
-  roleCredentialsCache = {
-    credentials,
-    expiration: new Date(credentials.Expiration).getTime()
+  const cached = await roleCredentialsRefreshPromise
+  if (cached.expiration - Date.now() <= minRemainingSeconds * 1000) {
+    throw new Error('OSS 角色临时凭证剩余有效期不足，请检查 RAM 角色最大会话时间和服务器时钟')
   }
-  return credentials
+  return cached
 }
 
 /**
  * 获取 OSS 对象的临时签名访问 URL
  * @param {string} objectKey OSS 对象完整路径
- * @param {number} expires 有效期，单位秒，默认3600秒(1小时)
- * @returns {string} 签名访问 URL
+ * @param {number} expires 有效期上限，单位秒，默认 43200 秒（12 小时）
+ * @returns {Promise<string>} 签名访问 URL；兼容原有调用
  */
-async function getOssUrl(objectKey, expires = 3600) {
+async function getOssUrl(objectKey, expires = ossConfig.readUrlTtl) {
+  const { url } = await getSignedOssUrl(objectKey, expires)
+  return url
+}
+
+/** 返回签名 URL 和真实到期时间（Unix 毫秒时间戳），供前端提前 5 分钟刷新。 */
+async function getSignedOssUrl(objectKey, expires = ossConfig.readUrlTtl) {
   if (typeof objectKey !== 'string' || !objectKey.trim()) {
     throw new Error('objectKey 不能为空')
   }
 
-  if (!Number.isInteger(expires) || expires <= 0) {
-    throw new Error('签名 URL 有效期必须是正整数')
+  if (!Number.isInteger(expires) || expires <= 0 || expires > ossConfig.readStsTtl) {
+    throw new Error('签名 URL 有效期必须是正整数且不能超过读取 STS 凭证有效期')
   }
 
-  const ossClient = await getOssReadClient()
-
-  return ossClient.signatureUrl(objectKey.trim(), {
-    expires
+  // 请求接近 STS 上限时允许约 5 分钟复用，否则要求凭证覆盖整个 URL 时长。
+  const minRemainingSeconds = Math.min(expires + URL_SAFETY_SECONDS, ossConfig.readStsTtl - CREDENTIAL_REUSE_WINDOW_SECONDS)
+  const { credentials, expiration } = await getRoleCredentials(minRemainingSeconds)
+  const actualExpires = Math.min(expires, Math.floor((expiration - Date.now()) / 1000) - URL_SAFETY_SECONDS)
+  if (actualExpires <= 0) {
+    throw new Error('OSS 角色临时凭证已临近过期，请重试')
+  }
+  const url = createOssReadClient(credentials).signatureUrl(objectKey.trim(), {
+    expires: actualExpires
   })
+  // 从实际签名读取过期秒数，避免 SDK 的秒级取整与返回元数据不一致。
+  const signedExpiration = Number(new URL(url).searchParams.get('Expires')) * 1000
+  if (!Number.isFinite(signedExpiration) || signedExpiration <= Date.now()) {
+    throw new Error('OSS 签名 URL 过期时间无效')
+  }
+  return {
+    url,
+    urlExpiresAt: Math.min(signedExpiration, expiration - URL_SAFETY_SECONDS * 1000)
+  }
 }
 
 // 复用读取角色凭证，供服务端验证对象，不向前端暴露凭证
 async function getOssReadClient() {
-  const credentials = await getRoleCredentials()
+  const { credentials } = await getRoleCredentials()
+  return createOssReadClient(credentials)
+}
+
+function createOssReadClient(credentials) {
   return new OSS({
     region: ossConfig.region,
     endpoint: ossConfig.endpoint,
@@ -106,5 +150,6 @@ module.exports = {
   stsClient,
   normalizeSigningRegion,
   getOssUrl,
+  getSignedOssUrl,
   getOssReadClient
 }

@@ -108,7 +108,7 @@ function fixture(options = {}) {
         assert.equal(calls.commits, 0)
         if (options.signatureError) throw new Error('signature failed')
         if (options.missingUrl) return [{ id: ids[0], url: null }]
-        return [{ id: ids[0], url: 'https://example.com/avatar-signed' }]
+        return [{ id: ids[0], url: 'https://example.com/avatar-signed', urlExpiresAt: 1795608000000 }]
       }
     },
     '@/services/common/avatarObject': {
@@ -127,7 +127,7 @@ const request = { userId: 1, familyId: '2', avatarId: 3 }
 test('仅更新当前家庭内自己的 userAvatarId，事务提交后返回附件 ID 和签名 URL', async () => {
   const { service, calls, records } = fixture()
   const result = await service.updateUserAvatar(request)
-  assert.equal(JSON.stringify(result), JSON.stringify({ avatarId: 3, avatarUrl: 'https://example.com/avatar-signed' }))
+  assert.equal(JSON.stringify(result), JSON.stringify({ avatarId: 3, avatarUrl: 'https://example.com/avatar-signed', urlExpiresAt: 1795608000000 }))
   assert.deepEqual(calls.signatures, [[3]])
   assert.equal(records.familyUserMap.userAvatarId, 3)
   assert.equal(records.familyUserMap.nickname, '用户')
@@ -317,6 +317,8 @@ test('PUT 路由先执行头像参数校验，再调用控制器', () => {
     '@/controllers/modules/user': { updateUserAvatar: handler },
     '@/validations/modules/user': validation,
     '@/middlewares/validateMiddleware': (schema) => {
+      // 同一模块还注册昵称校验，本测试仅检查头像路由。
+      if (schema === validation.updateUserNickname) return () => {}
       assert.equal(schema, validation.updateUserAvatar)
       return middleware
     }

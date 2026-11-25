@@ -68,12 +68,14 @@ const familyService = {
       introduction: data.introduction,
       avatarId: data.avatarId,
       avatarUrl: '',
+      urlExpiresAt: null,
       createId: data.createId,
       createTime: data.createTime
     }
     if (data.avatarId > 0) {
       const [avatar] = await getAttachmentList([data.avatarId])
       resBody.avatarUrl = avatar?.url || ''
+      resBody.urlExpiresAt = avatar?.url ? (avatar.urlExpiresAt ?? null) : null
     }
     return resBody
   },
@@ -97,13 +99,14 @@ const familyService = {
       )
     ]
     const attachments = avatarIds.length ? await getAttachmentList(avatarIds) : []
-    const avatarUrlMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment.url]))
+    const avatarMap = new Map(attachments.map((attachment) => [String(attachment.id), attachment]))
 
     return members.map((member) => ({
       id: member.userId,
       nickname: member.nickname,
       avatarId: member.userAvatarId || 0,
-      avatarUrl: avatarUrlMap.get(String(member.userAvatarId)) || ''
+      avatarUrl: avatarMap.get(String(member.userAvatarId))?.url || '',
+      urlExpiresAt: avatarMap.get(String(member.userAvatarId))?.url ? (avatarMap.get(String(member.userAvatarId)).urlExpiresAt ?? null) : null
     }))
   },
   /**
@@ -156,7 +159,8 @@ const familyService = {
       }
       const resBody = {
         avatarId: ids.avatarId,
-        avatarUrl: avatar.url
+        avatarUrl: avatar.url,
+        urlExpiresAt: avatar.urlExpiresAt ?? null
       }
       return resBody
     })

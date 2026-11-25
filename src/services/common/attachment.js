@@ -1,6 +1,6 @@
 const { Op } = require('sequelize')
 const { attachmentList, sequelize } = require('@/models')
-const { getOssUrl } = require('@/config/oss')
+const { getSignedOssUrl } = require('@/config/oss')
 
 const attachmentService = {
   /**
@@ -34,16 +34,18 @@ const attachmentService = {
             objectKey: null,
             module: null,
             moduleType: null,
-            url: null
+            url: null,
+            urlExpiresAt: null
           }
         }
-        const url = await getOssUrl(attachment.objectKey)
+        const { url, urlExpiresAt } = await getSignedOssUrl(attachment.objectKey)
         return {
           id: attachment.id,
           objectKey: attachment.objectKey,
           module: attachment.module,
           moduleType: attachment.moduleType,
-          url
+          url,
+          urlExpiresAt
         }
       })
     )

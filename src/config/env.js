@@ -57,6 +57,8 @@ const env = {
     accessKeyId: process.env.OSS_ACCESS_KEY_ID,
     accessKeySecret: process.env.OSS_ACCESS_KEY_SECRET,
     roleArn: process.env.OSS_ROLE_ARN,
+    readStsTtl: Number(process.env.OSS_READ_STS_TTL),
+    readUrlTtl: Number(process.env.OSS_READ_URL_TTL),
     uploadMaxSize: Number(process.env.OSS_UPLOAD_MAX_SIZE),
     uploadPolicyTtl: Number(process.env.OSS_UPLOAD_POLICY_TTL)
   }

@@ -13,16 +13,17 @@ const attachmentController = {
     // const userId = req.user.id
     // const familyId = req.headers['family-id']
     const { idArr } = req.query
-    if (!idArr || idArr === '') {
+    if (!idArr || idArr.length === 0) {
       return fail(res, '附件id不能为空', 400, codeEnum.paramInvalid)
     }
-    const tempIdArr = JSON.parse(idArr)
     // const params = {
     //   userId,
     //   familyId,
-    //   idArr: JSON.parse(idArr)
+    //   idArr
     // }
-    const list = await attachmentService.getAttachmentList(tempIdArr)
+    const list = await attachmentService.getAttachmentList(idArr)
+    // 续签请求不得命中旧响应缓存。
+    res.set('Cache-Control', 'no-store')
     success(res, list)
   }),
 
