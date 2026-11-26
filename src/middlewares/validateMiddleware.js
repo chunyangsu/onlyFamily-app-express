@@ -9,7 +9,7 @@ const codeEnum = require('@/data/enum/code')
 const validateMiddleware = (schema) => {
   return (req, res, next) => {
     // 参数来源
-    const sourceArr = ['body', 'params', 'query']
+    const sourceArr = ['body', 'params', 'query', 'headers']
     // 存放验证通过后的参数
     const validated = {}
 

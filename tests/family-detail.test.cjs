@@ -7,6 +7,8 @@ const vm = require('node:vm')
 function fixture({ family, avatarUrl = 'https://example.com/signed-family-avatar', attachmentError } = {}) {
   const calls = { details: [], attachments: [] }
   const imports = {
+    '@/utils/invitation': {},
+    '@/config/env': {},
     '@/models': {
       familyList: {
         async findByPk(id, options) {

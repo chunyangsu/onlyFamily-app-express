@@ -37,10 +37,10 @@ const familyUserMap = sequelize.define(
       comment: '用户头像'
     },
     role: {
-      type: DataTypes.TINYINT.UNSIGNED,
+      type: DataTypes.STRING(50),
       allowNull: false,
-      defaultValue: 2, // 管理员 1、普通成员 2
-      comment: '角色'
+      defaultValue: 'member', // 管理员admin、普通成员member
+      comment: '角色：管理员admin、普通成员member'
     },
     // 创建时间 (映射为 createTime，使用 BIGINT 时间戳)
     createTime: {
@@ -60,6 +60,9 @@ const familyUserMap = sequelize.define(
   {
     // 核心配置项
     tableName: 'family_user_map', // 指定数据库中的真实表名
+    indexes: [
+      { name: 'uk_family_user_map_family_user', unique: true, fields: ['familyId', 'userId'] }
+    ],
     timestamps: false, // 关闭自动时间戳管理
     createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段
     updatedAt: 'updateTime', // 将 updatedAt 映射到 updateTime 字段

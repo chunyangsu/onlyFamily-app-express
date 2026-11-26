@@ -34,21 +34,6 @@ const familyController = {
     const newData = await familyService.createFamily(params)
     success(res, newData)
   }),
-
-  /**
-   * 加入家庭
-   */
-  joinFamily: asyncHandler(async (req, res) => {
-    const userId = req.user.id
-    const { familyId } = req.body
-    const params = {
-      userId,
-      familyId
-    }
-    // 调用service中的方法
-    const newData = await familyService.joinFamily(params)
-    success(res, newData)
-  }),
   /**
    * 获取家庭详情
    */
@@ -81,6 +66,49 @@ const familyController = {
     // 调用service中的方法
     const resBody = await familyService.updateFamilyAvatar(params)
     success(res, resBody)
+  }),
+
+  /**
+   * 创建邀请码
+   */
+  createInvitationCode: asyncHandler(async (req, res) => {
+    const userId = req.user.id
+    const familyId = req.validated.headers['family-id']
+    // 调用service中的方法
+    const params = {
+      userId,
+      familyId
+    }
+    const newData = await familyService.createInvitationCode(params)
+    success(res, newData)
+  }),
+  /**
+   * 获取邀请信息
+   */
+  getInvitationDetail: asyncHandler(async (req, res) => {
+    const userId = req.user.id
+    const { invitationCode } = req.validated.body
+    // 调用service中的方法
+    const params = {
+      userId,
+      invitationCode
+    }
+    const newData = await familyService.getInvitationDetail(params)
+    success(res, newData)
+  }),
+  /**
+   * 加入家庭(使用邀请码)
+   */
+  joinFamily: asyncHandler(async (req, res) => {
+    const userId = req.user.id
+    const { invitationCode } = req.validated.body
+    // 调用service中的方法
+    const params = {
+      userId,
+      invitationCode
+    }
+    const newData = await familyService.joinFamily(params)
+    success(res, newData)
   })
 }
 

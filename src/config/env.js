@@ -49,6 +49,10 @@ const env = {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN
   },
+  // 家庭邀请有效期，单位：默认24 小时
+  familyInvitation: {
+    ttl: Number(process.env.FAMILY_INVITATION_TTL)
+  },
   // OSS 配置
   oss: {
     bucket: process.env.OSS_BUCKET,

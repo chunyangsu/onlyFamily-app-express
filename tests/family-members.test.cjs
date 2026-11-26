@@ -7,6 +7,8 @@ const vm = require('node:vm')
 function fixture({ members = [], attachments = [], attachmentError } = {}) {
   const calls = { queries: [], attachments: [] }
   const imports = {
+    '@/utils/invitation': {},
+    '@/config/env': {},
     '@/models': {
       familyUserMap: {
         async findAll(query) {

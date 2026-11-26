@@ -6,13 +6,11 @@ const vm = require('node:vm')
 
 function load(file, imports) {
   const module = { exports: {} }
-  vm.runInNewContext(readFileSync(resolve(__dirname, '..', file), 'utf8'), {
-    module,
-    exports: module.exports,
-    require(name) {
-      if (!(name in imports)) throw new Error(`Unexpected import: ${name}`)
-      return imports[name]
-    }
+  // Joi 检查 RegExp 身份，需要与被测代码使用同一 JavaScript realm。
+  const evaluate = vm.runInThisContext(`(function(module, require) {\n${readFileSync(resolve(__dirname, '..', file), 'utf8')}\n})`)
+  evaluate(module, (name) => {
+    if (!(name in imports)) throw new Error(`Unexpected import: ${name}`)
+    return imports[name]
   })
   return module.exports
 }
@@ -46,7 +44,7 @@ function fixture(options = {}) {
   const records = {
     userList: { id: 1, status: 'normal' },
     familyList: { id: 2, status: 'normal', deleteTime: 0, avatarId: 7, name: '家庭名称' },
-    familyUserMap: { userId: 1, familyId: 2, role: 2, userAvatarId: 9 },
+    familyUserMap: { userId: 1, familyId: 2, role: 'member', userAvatarId: 9 },
     attachmentList: {
       id: 3,
       familyId: 2,
@@ -83,6 +81,8 @@ function fixture(options = {}) {
     }
   }
   const service = load('src/services/modules/family.js', {
+    '@/utils/invitation': {},
+    '@/config/env': {},
     '@/models': models,
     '@/services/common/avatarObject': {
       async validateAvatarObject(key, mime) {
@@ -228,7 +228,7 @@ test('路由先校验，Controller 使用 JWT 用户和当前家庭，不接受 
     '@/controllers/modules/family': controller,
     '@/validations/modules/family': validation,
     '@/middlewares/validateMiddleware': (schema) => {
-      assert.equal(schema, validation.updateFamilyAvatar)
+      assert.ok(Object.values(validation).includes(schema))
       return middleware
     }
   })

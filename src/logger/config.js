@@ -25,6 +25,13 @@ const redactPaths = [
   '*.password',
   'req.body.password',
 
+  // 家庭邀请原始凭证
+  'invitationCode',
+  '*.invitationCode',
+  'req.body.invitationCode',
+  'res.body.invitationCode',
+  'res.body.data.invitationCode',
+
   // Token
   'token',
   '*.token',
