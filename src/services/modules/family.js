@@ -40,6 +40,15 @@ const familyService = {
    * @param {Object} data 参数
    */
   joinFamily: async (data) => {
+    const member = await familyUserMap.findOne({
+      where: { familyId: data.familyId, userId: data.userId }
+    })
+    if (member) {
+      const error = new Error('已加入该家庭，请勿重复加入')
+      error.status = 409
+      throw error
+    }
+
     const params = {
       familyId: data.familyId,
       userId: data.userId,
@@ -68,14 +77,14 @@ const familyService = {
       introduction: data.introduction,
       avatarId: data.avatarId,
       avatarUrl: '',
-      urlExpiresAt: null,
+      expiresTime: null,
       createId: data.createId,
       createTime: data.createTime
     }
     if (data.avatarId > 0) {
       const [avatar] = await getAttachmentList([data.avatarId])
       resBody.avatarUrl = avatar?.url || ''
-      resBody.urlExpiresAt = avatar?.url ? (avatar.urlExpiresAt ?? null) : null
+      resBody.expiresTime = avatar?.url ? (avatar.expiresTime ?? null) : null
     }
     return resBody
   },
@@ -106,7 +115,7 @@ const familyService = {
       nickname: member.nickname,
       avatarId: member.userAvatarId || 0,
       avatarUrl: avatarMap.get(String(member.userAvatarId))?.url || '',
-      urlExpiresAt: avatarMap.get(String(member.userAvatarId))?.url ? (avatarMap.get(String(member.userAvatarId)).urlExpiresAt ?? null) : null
+      expiresTime: avatarMap.get(String(member.userAvatarId))?.url ? (avatarMap.get(String(member.userAvatarId)).expiresTime ?? null) : null
     }))
   },
   /**
@@ -160,7 +169,7 @@ const familyService = {
       const resBody = {
         avatarId: ids.avatarId,
         avatarUrl: avatar.url,
-        urlExpiresAt: avatar.urlExpiresAt ?? null
+        expiresTime: avatar.expiresTime ?? null
       }
       return resBody
     })

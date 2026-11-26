@@ -12,10 +12,11 @@ const attachmentController = {
   getAttachmentList: asyncHandler(async (req, res) => {
     // const userId = req.user.id
     // const familyId = req.headers['family-id']
-    const { idArr } = req.query
-    if (!idArr || idArr.length === 0) {
+    const { ids } = req.query
+    if (!ids || ids === '') {
       return fail(res, '附件id不能为空', 400, codeEnum.paramInvalid)
     }
+    const idArr = ids.split(',').map(Number)
     // const params = {
     //   userId,
     //   familyId,

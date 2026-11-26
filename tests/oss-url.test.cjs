@@ -78,10 +78,10 @@ test('12 小时 STS 签发接近 12 小时的 URL，保留 60 秒安全余量并
   assert.equal(calls.sts[0][2], 43200)
   assert.equal(calls.signatures[0].key, 'avatar')
   assert.equal(calls.signatures[0].expires, 43140)
-  assert.equal(typeof result.urlExpiresAt, 'number')
-  assert.ok(Number.isSafeInteger(result.urlExpiresAt))
-  assert.equal(result.urlExpiresAt, now() + 43140 * 1000)
-  assert.equal(result.urlExpiresAt, Number(new URL(result.url).searchParams.get('Expires')) * 1000)
+  assert.equal(typeof result.expiresTime, 'number')
+  assert.ok(Number.isSafeInteger(result.expiresTime))
+  assert.equal(result.expiresTime, now() + 43140 * 1000)
+  assert.equal(result.expiresTime, Number(new URL(result.url).searchParams.get('Expires')) * 1000)
   assert.equal(api.ossConfig.region, 'cn-shanghai')
   assert.equal(typeof (await api.getOssUrl('avatar')), 'string')
 })
@@ -90,11 +90,11 @@ test('到期时间以毫秒数字序列化，秒级签名与非整秒服务器�
   const { api, advance, now } = fixture()
   advance(0.123)
   const result = JSON.parse(JSON.stringify(await api.getSignedOssUrl('avatar')))
-  assert.equal(typeof result.urlExpiresAt, 'number')
-  assert.ok(Number.isSafeInteger(result.urlExpiresAt))
-  assert.equal(result.urlExpiresAt, Number(new URL(result.url).searchParams.get('Expires')) * 1000)
-  assert.ok(result.urlExpiresAt <= now() + 43140 * 1000)
-  assert.equal(now() + 43140 * 1000 - result.urlExpiresAt, 123)
+  assert.equal(typeof result.expiresTime, 'number')
+  assert.ok(Number.isSafeInteger(result.expiresTime))
+  assert.equal(result.expiresTime, Number(new URL(result.url).searchParams.get('Expires')) * 1000)
+  assert.ok(result.expiresTime <= now() + 43140 * 1000)
+  assert.equal(now() + 43140 * 1000 - result.expiresTime, 123)
 })
 
 test('并发首次签名只申请一次凭证，短暂复用后重新申请以保证接近 12 小时', async () => {
@@ -107,20 +107,20 @@ test('并发首次签名只申请一次凭证，短暂复用后重新申请以�
   advance(2)
   const renewed = await api.getSignedOssUrl('renewed')
   assert.equal(calls.sts.length, 2)
-  assert.ok(renewed.urlExpiresAt > cached.urlExpiresAt)
+  assert.ok(renewed.expiresTime > cached.expiresTime)
   assert.equal(new URL(renewed.url).searchParams.get('security-token'), 'test-token-2')
 })
 
 test('在旧地址到期前 5 分钟续签可获得新一轮有效期，旧地址元数据不变', async () => {
   const { api, calls, advance, now } = fixture()
   const original = await api.getSignedOssUrl('avatar')
-  const oldExpiration = original.urlExpiresAt
+  const oldExpiration = original.expiresTime
   advance(43140 - 300)
   const renewed = await api.getSignedOssUrl('avatar')
   assert.equal(calls.sts.length, 2)
-  assert.equal(renewed.urlExpiresAt, now() + 43140 * 1000)
-  assert.equal(original.urlExpiresAt, oldExpiration)
-  assert.ok(renewed.urlExpiresAt > oldExpiration)
+  assert.equal(renewed.expiresTime, now() + 43140 * 1000)
+  assert.equal(original.expiresTime, oldExpiration)
+  assert.ok(renewed.expiresTime > oldExpiration)
 })
 
 test('自定义短时 URL 复用充足凭证；不足以覆盖时长时刷新，独立读取客户端仍正常工作', async () => {
@@ -192,14 +192,14 @@ test('拒绝无效、已过期或不足以满足时长的 STS 凭证', async () 
 
 test('真实 ali-oss 本地签名与到期时间字段一致，不访问阿里云', async () => {
   const { api } = fixture({ realSdk: true })
-  const { url, urlExpiresAt } = await api.getSignedOssUrl('avatar')
+  const { url, expiresTime } = await api.getSignedOssUrl('avatar')
   const query = new URL(url).searchParams
   assert.ok(query.get('Signature'))
   assert.equal(query.get('security-token'), 'test-token-1')
   // SDK 可能将当前时间向上取整到秒；返回值不能晚于安全截止时间。
   const signedExpiration = Number(query.get('Expires')) * 1000
-  assert.equal(typeof urlExpiresAt, 'number')
-  assert.ok(Number.isSafeInteger(urlExpiresAt))
-  assert.ok(urlExpiresAt <= signedExpiration)
-  assert.ok(signedExpiration - urlExpiresAt < 1000)
+  assert.equal(typeof expiresTime, 'number')
+  assert.ok(Number.isSafeInteger(expiresTime))
+  assert.ok(expiresTime <= signedExpiration)
+  assert.ok(signedExpiration - expiresTime < 1000)
 })

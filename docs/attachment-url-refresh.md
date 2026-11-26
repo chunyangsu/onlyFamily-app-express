@@ -2,12 +2,14 @@
 
 ## 后端配置
 
-RAM 角色最大会话时间需设为 43200 秒。以下配置默认均为 43200，未设置环境变量也使用 12 小时上限：
+RAM 角色最大会话时间需设为 43200 秒。12 小时方案需显式设置以下环境变量，当前配置读取逻辑不提供缺省值：
 
 ```dotenv
 OSS_READ_STS_TTL=43200
 OSS_READ_URL_TTL=43200
 ```
+
+当前开发环境为测试临时将 `OSS_READ_URL_TTL` 设为 `600`（10 分钟），读取 STS 时长仍为 `43200` 秒。
 
 `OSS_READ_STS_TTL` 为 900～43200 的整数；`OSS_READ_URL_TTL` 为正整数且不能超过 STS 时长。上传凭证与上传 Policy 的时长不变。
 
@@ -19,21 +21,21 @@ OSS_READ_URL_TTL=43200
 
 | 场景                                                            | 地址字段       | 到期时间字段   |
 | --------------------------------------------------------------- | -------------- | -------------- |
-| 附件查询                                                        | `url`          | `urlExpiresAt` |
-| 登录用户资料、用户/家庭头像更新、家庭详情、成员列表、订单创建人 | `avatarUrl`    | `urlExpiresAt` |
-| 菜品列表/分组、订单菜品                                         | `mainImageUrl` | `urlExpiresAt` |
+| 附件查询                                                        | `url`          | `expiresTime` |
+| 登录用户资料、用户/家庭头像更新、家庭详情、成员列表、订单创建人 | `avatarUrl`    | `expiresTime` |
+| 菜品列表/分组、订单菜品                                         | `mainImageUrl` | `expiresTime` |
 
-`urlExpiresAt` 统一返回 Unix 毫秒时间戳，类型为 `number | null`；例如 `1795608000000` 表示 `2026-11-25T12:00:00.000Z`。没有对应 URL 时为 `null`，不返回字符串或 `0`。不返回 STS 密钥或单独的临时凭证。
+`expiresTime` 统一返回 Unix 毫秒时间戳，类型为 `number | null`；例如 `1795608000000` 表示 `2026-11-25T12:00:00.000Z`。没有对应 URL 时为 `null`，不返回字符串或 `0`。不返回 STS 密钥或单独的临时凭证。
 
-没有命名冲突时，到期时间统一使用 `urlExpiresAt`。订单创建人和菜品分别在各自对象内返回该字段，不会互相覆盖；未来同一对象若包含多个独立到期的 URL，应按附件嵌套对象区分，避免共用一个到期时间。
+没有命名冲突时，到期时间统一使用 `expiresTime`。订单创建人和菜品分别在各自对象内返回该字段，不会互相覆盖；未来同一对象若包含多个独立到期的 URL，应按附件嵌套对象区分，避免共用一个到期时间。
 
-注意：OSS 签名 URL 查询参数里的 `Expires` 仍为秒，STS 返回的 `Expiration` 仍按云端字符串解析；这里只调整业务接口的 `urlExpiresAt` 返回格式，不改变签名算法或有效期配置。
+注意：OSS 签名 URL 查询参数里的 `Expires` 仍为秒，STS 返回的 `Expiration` 仍按云端字符串解析；这里只调整业务接口的 `expiresTime` 返回格式，不改变签名算法或有效期配置。
 
 ## 前端接入（本仓库不包含前端实现）
 
-1. 按附件 ID 保存 `{ url, urlExpiresAt }`，不要把签名 URL 当作永久地址。头像使用 `avatarId`，菜品图使用 `mainImageId`。
-2. 先确认 `typeof urlExpiresAt === 'number' && Number.isFinite(urlExpiresAt)`，再用 `urlExpiresAt - Date.now() <= 5 * 60 * 1000` 判断是否临近到期。需要刷新时重新调用现有 `GET /api/attachment/getList`，查询参数 `idArr` 为 JSON 数组，例如 `JSON.stringify([avatarId])`。继续携带有效登录凭证及现有业务要求的请求头。
-3. 用响应中的 `url` 和 `urlExpiresAt` 同时替换缓存；同步更新用户资料里的 `avatarUrl`、`urlExpiresAt`，并重新安排刷新计时器。不要仅再次赋值旧 URL，也不要重复上传头像。
+1. 按附件 ID 保存 `{ url, expiresTime }`，不要把签名 URL 当作永久地址。头像使用 `avatarId`，菜品图使用 `mainImageId`。
+2. 先确认 `typeof expiresTime === 'number' && Number.isFinite(expiresTime)`，再用 `expiresTime - Date.now() <= 5 * 60 * 1000` 判断是否临近到期。需要刷新时重新调用现有 `GET /api/attachment/getList`，查询参数 `idArr` 使用数组，例如请求参数对象 `{ idArr: [avatarId] }`，由请求层序列化，不再使用 `JSON.stringify` 转成字符串。继续携带有效登录凭证及现有业务要求的请求头。
+3. 用响应中的 `url` 和 `expiresTime` 同时替换缓存；同步更新用户资料里的 `avatarUrl`、`expiresTime`，并重新安排刷新计时器。不要仅再次赋值旧 URL，也不要重复上传头像。
 4. 页面持续展示时设置到期前刷新的计时器；应用启动、页面进入和回到前台时也要检查，后台计时器可能暂停。缺少/无法解析过期时间的旧缓存按需要刷新处理。
 5. 同一附件合并并发刷新请求，可批量查询多个附件。图片加载失败时强制重新获取地址并重试一次，仍失败显示默认图；接口失败采用有限退避重试，不能形成无限循环。401 按已有登录失效流程处理。
 6. 客户端时钟需准确，5 分钟提前量用于容忍少量时钟偏差。没有网络时无法保证已经过期的图片仍可重新下载。

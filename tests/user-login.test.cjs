@@ -28,7 +28,7 @@ function fixture({ members = [], avatarUrl = 'https://example.com/signed-avatar'
       getAttachmentList: async (ids) => {
         calls.signatures.push(Array.from(ids))
         if (signatureError) throw signatureError
-        return [{ id: ids[0], url: avatarUrl, urlExpiresAt: 1795608000000 }]
+        return [{ id: ids[0], url: avatarUrl, expiresTime: 1795608000000 }]
       }
     },
     '@/utils/jwt': { generateToken: (id) => `token-${id}` },
@@ -57,7 +57,7 @@ test('单家庭登录返回该家庭的成员昵称、头像 ID 和签名 URL', 
     familyId: 6,
     avatarId: 42,
     avatarUrl: 'https://example.com/signed-avatar',
-    urlExpiresAt: 1795608000000,
+    expiresTime: 1795608000000,
     nickname: '家庭内昵称'
   })
   assert.equal(calls.memberships[0].where.userId, 8)
@@ -69,7 +69,7 @@ test('无家庭、多家庭不自动选择，不读取任何头像', async () =>
   for (const members of [[], [member, { ...member, familyId: 7 }]]) {
     const { service, calls } = fixture({ members })
     const result = await service.login('code')
-    assert.deepEqual(JSON.parse(JSON.stringify(result.userInfo)), { id: 8, familyId: 0, avatarId: 0, avatarUrl: '', urlExpiresAt: null, nickname: '' })
+    assert.deepEqual(JSON.parse(JSON.stringify(result.userInfo)), { id: 8, familyId: 0, avatarId: 0, avatarUrl: '', expiresTime: null, nickname: '' })
     assert.equal(calls.signatures.length, 0)
   }
 })
@@ -81,7 +81,7 @@ test('单家庭未设置头像时返回昵称和空 URL，不调用签名方法'
   assert.equal(result.userInfo.familyId, 6)
   assert.equal(result.userInfo.avatarId, 0)
   assert.equal(result.userInfo.avatarUrl, '')
-  assert.equal(result.userInfo.urlExpiresAt, null)
+  assert.equal(result.userInfo.expiresTime, null)
   assert.equal(calls.signatures.length, 0)
 })
 

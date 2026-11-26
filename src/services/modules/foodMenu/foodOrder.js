@@ -67,12 +67,12 @@ const foodOrderService = {
           nickname: member?.nickname || '',
           avatarId,
           avatarUrl: Number(avatarId) > 0 ? attachmentMap.get(String(avatarId))?.url || '' : '',
-          urlExpiresAt: Number(avatarId) > 0 && attachmentMap.get(String(avatarId))?.url ? (attachmentMap.get(String(avatarId)).urlExpiresAt ?? null) : null
+          expiresTime: Number(avatarId) > 0 && attachmentMap.get(String(avatarId))?.url ? (attachmentMap.get(String(avatarId)).expiresTime ?? null) : null
         },
         dishArr: data.dishArr.map((dish) => ({
           ...dish,
           mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
-          urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
+          expiresTime: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).expiresTime ?? null) : null
         }))
       }
     })
@@ -195,12 +195,12 @@ const foodOrderService = {
         nickname: member?.nickname || '',
         avatarId,
         avatarUrl: Number(avatarId) > 0 ? attachmentMap.get(String(avatarId))?.url || '' : '',
-        urlExpiresAt: Number(avatarId) > 0 && attachmentMap.get(String(avatarId))?.url ? (attachmentMap.get(String(avatarId)).urlExpiresAt ?? null) : null
+        expiresTime: Number(avatarId) > 0 && attachmentMap.get(String(avatarId))?.url ? (attachmentMap.get(String(avatarId)).expiresTime ?? null) : null
       },
       dishArr: tempData.dishArr.map((dish) => ({
         ...dish,
         mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
-        urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
+        expiresTime: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).expiresTime ?? null) : null
       }))
     }
   }

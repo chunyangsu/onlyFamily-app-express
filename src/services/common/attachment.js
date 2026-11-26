@@ -35,17 +35,17 @@ const attachmentService = {
             module: null,
             moduleType: null,
             url: null,
-            urlExpiresAt: null
+            expiresTime: null
           }
         }
-        const { url, urlExpiresAt } = await getSignedOssUrl(attachment.objectKey)
+        const { url, expiresTime } = await getSignedOssUrl(attachment.objectKey)
         return {
           id: attachment.id,
           objectKey: attachment.objectKey,
           module: attachment.module,
           moduleType: attachment.moduleType,
           url,
-          urlExpiresAt
+          expiresTime
         }
       })
     )

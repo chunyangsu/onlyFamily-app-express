@@ -123,7 +123,7 @@ async function getSignedOssUrl(objectKey, expires = ossConfig.readUrlTtl) {
   }
   return {
     url,
-    urlExpiresAt: Math.min(signedExpiration, expiration - URL_SAFETY_SECONDS * 1000)
+    expiresTime: Math.min(signedExpiration, expiration - URL_SAFETY_SECONDS * 1000)
   }
 }
 

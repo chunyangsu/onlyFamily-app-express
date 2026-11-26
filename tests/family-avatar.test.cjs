@@ -97,7 +97,7 @@ function fixture(options = {}) {
         assert.equal(calls.updates.length, 0)
         assert.equal(calls.transactions, 0)
         if (options.signatureError) throw new Error('signature failed')
-        return [{ id: ids[0], url: options.missingUrl ? null : 'https://example.com/signed-family-avatar', urlExpiresAt: 1795608000000 }]
+        return [{ id: ids[0], url: options.missingUrl ? null : 'https://example.com/signed-family-avatar', expiresTime: 1795608000000 }]
       }
     }
   })
@@ -110,7 +110,7 @@ test('家庭成员更新当前家庭 avatarId，返回签名 URL，不修改成�
   const result = await service.updateFamilyAvatar(request)
   assert.equal(result.avatarId, 3)
   assert.equal(result.avatarUrl, 'https://example.com/signed-family-avatar')
-  assert.equal(result.urlExpiresAt, 1795608000000)
+  assert.equal(result.expiresTime, 1795608000000)
   assert.deepEqual(calls.signatures, [[3]])
   assert.equal(calls.checks.length, 1)
   assert.equal(records.familyList.avatarId, 3)

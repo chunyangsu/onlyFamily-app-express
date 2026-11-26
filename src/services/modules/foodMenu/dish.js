@@ -44,7 +44,7 @@ const dishService = {
       list: dishes.map((dish) => ({
         ...dish,
         mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
-        urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
+        expiresTime: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).expiresTime ?? null) : null
       }))
     }
   },
@@ -114,7 +114,7 @@ const dishService = {
     const dishesWithMainImageUrl = dishes.map((dish) => ({
       ...dish,
       mainImageUrl: attachmentMap.get(String(dish.mainImageId))?.url ?? '',
-      urlExpiresAt: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).urlExpiresAt ?? null) : null
+      expiresTime: attachmentMap.get(String(dish.mainImageId))?.url ? (attachmentMap.get(String(dish.mainImageId)).expiresTime ?? null) : null
     }))
 
     // 5. 根据分类ID分组菜品

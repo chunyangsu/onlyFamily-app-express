@@ -59,7 +59,7 @@ const userService = {
         familyId: 0,
         avatarId: 0,
         avatarUrl: '',
-        urlExpiresAt: null,
+        expiresTime: null,
         nickname: ''
       }
     }
@@ -79,7 +79,7 @@ const userService = {
       if (resBody.userInfo.avatarId) {
         const [avatar] = await getAttachmentList([resBody.userInfo.avatarId])
         resBody.userInfo.avatarUrl = avatar?.url || ''
-        resBody.userInfo.urlExpiresAt = avatar?.url ? (avatar.urlExpiresAt ?? null) : null
+        resBody.userInfo.expiresTime = avatar?.url ? (avatar.expiresTime ?? null) : null
       }
     }
     return resBody
@@ -175,7 +175,7 @@ const userService = {
       const resBody = {
         avatarId: ids.avatarId,
         avatarUrl: avatar.url,
-        urlExpiresAt: avatar.urlExpiresAt ?? null
+        expiresTime: avatar.expiresTime ?? null
       }
       return resBody
     })

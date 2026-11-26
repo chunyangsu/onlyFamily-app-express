@@ -24,14 +24,14 @@ test('附件列表返回 URL 到期时间，保留请求顺序及缺失附件的
     '@/config/oss': {
       getSignedOssUrl: async (key) => {
         calls.push(key)
-        return { url: 'https://example.com/signed', urlExpiresAt: 1795608000000 }
+        return { url: 'https://example.com/signed', expiresTime: 1795608000000 }
       }
     }
   })
   const result = await service.getAttachmentList([7, 99, '7'])
-  assert.equal(result[0].urlExpiresAt, 1795608000000)
+  assert.equal(result[0].expiresTime, 1795608000000)
   assert.equal(result[1].url, null)
-  assert.equal(result[1].urlExpiresAt, null)
+  assert.equal(result[1].expiresTime, null)
   assert.equal(result[2].id, 7)
   assert.equal(calls.length, 2)
 })
@@ -40,7 +40,7 @@ test('续签沿用附件查询接口，禁止缓存返回的新地址与过期�
   const headers = {}
   let response
   const controller = load('src/controllers/common/attachment.js', {
-    '@/services/common/attachment': { getAttachmentList: async (ids) => [{ id: ids[0], url: 'new-url', urlExpiresAt: 1795608000000 }] },
+    '@/services/common/attachment': { getAttachmentList: async (ids) => [{ id: ids[0], url: 'new-url', expiresTime: 1795608000000 }] },
     '@/utils/asyncHandler': (fn) => fn,
     '@/utils/responseHandler': {
       success: (_res, value) => {
@@ -50,7 +50,7 @@ test('续签沿用附件查询接口，禁止缓存返回的新地址与过期�
     '@/data/enum/code': {}
   })
   await controller.getAttachmentList(
-    { query: { idArr: '[7]' } },
+    { query: { idArr: [7] } },
     {
       set: (key, value) => {
         headers[key] = value
@@ -60,7 +60,7 @@ test('续签沿用附件查询接口，禁止缓存返回的新地址与过期�
   assert.equal(headers['Cache-Control'], 'no-store')
   assert.equal(response[0].id, 7)
   assert.equal(response[0].url, 'new-url')
-  assert.equal(response[0].urlExpiresAt, 1795608000000)
+  assert.equal(response[0].expiresTime, 1795608000000)
 })
 
 test('菜品分页和分组均保留附件签名过期时间，无图片时返回 null', async () => {
@@ -74,14 +74,14 @@ test('菜品分页和分组均保留附件签名过期时间，无图片时返�
       dishList: { findAndCountAll: async () => ({ count: 2, rows: dishes }), findAll: async () => dishes },
       dishCategoryList: { findAll: async () => [{ id: 3, name: '分类' }] }
     },
-    '@/services/common/attachment': { getAttachmentList: async () => [{ id: 7, url: 'dish-url', urlExpiresAt: 1795608000000 }] }
+    '@/services/common/attachment': { getAttachmentList: async () => [{ id: 7, url: 'dish-url', expiresTime: 1795608000000 }] }
   })
   const paged = (await service.getDishList()).list
   const grouped = (await service.getDishGroupList({})).list[0].dishList
   for (const list of [paged, grouped]) {
     assert.equal(list[0].mainImageUrl, 'dish-url')
-    assert.equal(list[0].urlExpiresAt, 1795608000000)
+    assert.equal(list[0].expiresTime, 1795608000000)
     assert.equal(list[1].mainImageUrl, '')
-    assert.equal(list[1].urlExpiresAt, null)
+    assert.equal(list[1].expiresTime, null)
   }
 })

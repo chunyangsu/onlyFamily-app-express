@@ -41,10 +41,6 @@ const familyController = {
   joinFamily: asyncHandler(async (req, res) => {
     const userId = req.user.id
     const { familyId } = req.body
-    // 校验必传参数
-    // if (!name) {
-    //   return fail(res, '菜品名称不能为空', 400, codeEnum.paramInvalid)
-    // }
     const params = {
       userId,
       familyId
