@@ -19,19 +19,20 @@ const foodOrderController = {
    * 新增食物订单
    */
   createFoodOrder: asyncHandler(async (req, res) => {
+    const userId = req.user.id
     const { dishArr, remark } = req.body
     // 校验必传参数
     if (!dishArr || !Array.isArray(dishArr) || dishArr.length === 0) {
       return fail(res, '菜品不能为空', 400, codeEnum.paramInvalid)
     }
 
-    const tempParams = {
-      dishArr: dishArr,
-      remark: remark,
-      createId: 1
+    const params = {
+      userId,
+      dishArr,
+      remark
     }
     // 调用service中的方法
-    const response = await foodOrderService.createFoodOrder(tempParams)
+    const response = await foodOrderService.createFoodOrder(params)
     success(res, response)
   }),
   /**

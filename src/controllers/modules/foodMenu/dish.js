@@ -11,12 +11,13 @@ const dishController = {
    * 获取菜品列表
    */
   getDishList: asyncHandler(async (req, res) => {
+    const familyId = req.headers['family-id']
     const { name, page, pageSize } = req.validated.query
     const query = {
       name,
       page,
       pageSize,
-      familyId: 1
+      familyId
     }
     const list = await dishService.getDishList(query)
     success(res, list)
@@ -26,11 +27,12 @@ const dishController = {
    * 获取菜品列表(按菜品分类分组)
    */
   getDishGroupList: asyncHandler(async (req, res) => {
+    const familyId = req.headers['family-id']
     const { name, categoryIds } = req.query
     const query = {
       name,
       categoryIds,
-      familyId: 1
+      familyId
     }
     const list = await dishService.getDishGroupList(query)
     success(res, list)
@@ -41,6 +43,7 @@ const dishController = {
    */
   createDish: asyncHandler(async (req, res) => {
     const userId = req.user.id
+    const familyId = req.headers['family-id']
     const { name, mainImageId, categoryId, introduction, makeProcess, price } = req.validated.body
 
     const params = {
@@ -60,7 +63,7 @@ const dishController = {
       req,
       module: LOG_MODULE.DISH,
       action: 'create',
-      familyId: 1,
+      familyId: familyId,
       targetId: newData.id,
       message: '新增菜品成功'
     })

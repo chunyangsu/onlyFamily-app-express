@@ -15,7 +15,7 @@ const familyController = {
   // }),
 
   /**
-   * 新增家庭
+   * 创建家庭
    */
   createFamily: asyncHandler(async (req, res) => {
     const userId = req.user.id
@@ -26,9 +26,9 @@ const familyController = {
     }
 
     const params = {
+      userId,
       name,
-      introduction,
-      userId
+      introduction
     }
     // 调用service中的方法
     const newData = await familyService.createFamily(params)

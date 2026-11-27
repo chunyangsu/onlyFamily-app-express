@@ -79,14 +79,15 @@ const foodOrderService = {
   },
   /**
    * 新增食物订单
-   * @param {Object} data 对象参数
+   * @param {Object} data：userId、dishArr、remark
    */
   createFoodOrder: async (data) => {
+    const { userId, dishArr, remark } = data
     return sequelize.transaction(async (transaction) => {
       const masterParams = {
         code: '',
-        remark: data.remark,
-        createId: 1
+        remark: remark,
+        createId: userId
       }
       const masterResult = await foodOrderList.create(masterParams, { transaction })
       // 根据新生成的食物订单id生成订单编号
@@ -94,9 +95,9 @@ const foodOrderService = {
       await foodOrderList.update({ code: masterCode }, { where: { id: masterResult.id }, transaction })
 
       // 继续新增菜品明细
-      if (data.dishArr && data.dishArr.length > 0) {
+      if (dishArr && dishArr.length > 0) {
         // 以服务端菜品数据为准，避免信任前端传入的名称、分类和价格
-        const dishIds = [...new Set(data.dishArr.map((item) => item.id))]
+        const dishIds = [...new Set(dishArr.map((item) => item.id))]
         const dishListData = await dishList.findAll({
           where: { id: dishIds },
           attributes: ['id', 'name', 'mainImageId', 'categoryId', 'price'],
@@ -112,7 +113,7 @@ const foodOrderService = {
         })
         const categoryMap = new Map(categoryList.map((category) => [String(category.id), category.name]))
 
-        const tempArr = data.dishArr.map((item) => {
+        const tempArr = dishArr.map((item) => {
           const tempDish = dishMap.get(String(item.id))
           if (!tempDish) {
             throw new Error(`菜品不存在：${item.id}`)
@@ -127,7 +128,7 @@ const foodOrderService = {
             dishCategoryName: categoryMap.get(String(tempDish.categoryId)) || '', // 菜品分类名称
             price: tempDish.price, // 菜品价格
             num: item.num, // 菜品数量
-            createId: 1
+            createId: userId
           }
         })
         await foodOrderDetails.bulkCreate(tempArr, { transaction })

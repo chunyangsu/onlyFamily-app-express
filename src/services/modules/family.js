@@ -14,18 +14,20 @@ const familyService = {
   // },
   /**
    * 创建家庭
-   * @param {Object} data 参数
+   * @param {Object} data：userId、name、introduction
    */
   createFamily: async (data) => {
+    const { userId, name, introduction } = data
     const masterParams = {
-      name: data.name,
-      introduction: data.introduction
+      createId: userId,
+      name: name,
+      introduction: introduction
     }
     const newFamily = await familyList.create(masterParams)
 
     // 同步加入新创建的家庭
     const member = await familyUserMap.findOne({
-      where: { familyId: newFamily.id, userId: data.userId }
+      where: { familyId: newFamily.id, userId: userId }
     })
     if (member) {
       const error = new Error('已加入该家庭，请勿重复加入')
@@ -34,7 +36,7 @@ const familyService = {
     }
     const params = {
       familyId: newFamily.id,
-      userId: data.userId,
+      userId: userId,
       role: 'admin'
     }
     await familyUserMap.create(params)
@@ -381,16 +383,19 @@ const familyService = {
         checkExpiration()
         if (!member) {
           role = 'member' // 不接受客户端指定角色，也不继承邀请人的角色。
-          await familyUserMap.create(
-            {
-              familyId: invitation.familyId,
-              userId: currentUserId,
-              nickname: `用户_${currentUserId}`,
-              userAvatarId: 0,
-              role
-            },
-            { transaction }
-          )
+          const tempNickname =
+            '用户_WJ' +
+            Math.floor(Math.random() * 10000)
+              .toString()
+              .padStart(4, '0')
+          const joinParams = {
+            familyId: invitation.familyId,
+            userId: currentUserId,
+            nickname: tempNickname,
+            userAvatarId: 0,
+            role
+          }
+          await familyUserMap.create(joinParams, { transaction })
           checkExpiration()
           await invitation.update({ status: 'used', joinerId: currentUserId, joinTime: Date.now() }, { transaction })
         }
