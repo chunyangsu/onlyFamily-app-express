@@ -72,7 +72,7 @@ test('有效邀请返回家庭内昵称、家庭资料、独立的头像过期�
   const { service, calls, records } = fixture()
   const result = await service.getInvitationDetail({ ...request, familyId: 99 })
   assert.deepEqual(JSON.parse(JSON.stringify(result)), {
-    inviterId: 3, inviterNickname: '小明', familyId: 2, familyName: '幸福一家',
+    inviterId: 3, inviterAvatarId: 0, inviterAvatarUrl: '', inviterNickname: '小明', familyId: 2, familyName: '幸福一家',
     familyAvatarId: 7, familyAvatarUrl: 'signed-avatar', familyAvatarExpiresTime: now + 43200000,
     status: 'unused', expiresTime: now + 86400000, isMember: false
   })
@@ -96,16 +96,42 @@ test('已是成员或邀请人本人预览仍只读，不消费邀请，支持�
   }
 })
 
-test('无头像、缺失附件或附件无链接时返回空地址及 null 过期时间', async () => {
+test('无头像、缺失附件或附件无链接时返回空地址', async () => {
   for (const options of [{ records: { family: { avatarId: 0 } } }, { attachments: [] }, { attachments: [{ url: '' }] }]) {
     const { service, calls } = fixture(options)
     const result = await service.getInvitationDetail(request)
     assert.equal(result.familyAvatarUrl, '')
-    assert.equal(result.familyAvatarExpiresTime, null)
+    assert.equal(result.familyAvatarExpiresTime, options.records ? undefined : null)
     if (options.records) assert.equal(calls.attachments.length, 0)
   }
   const { service } = fixture({ records: { inviterMember: { nickname: '' } } })
   assert.equal((await service.getInvitationDetail(request)).inviterNickname, '')
+})
+
+test('邀请人头像使用家庭成员头像，并查询对应附件链接', async () => {
+  const { service, calls } = fixture({ records: {
+    inviter: { avatarId: 99 }, inviterMember: { userAvatarId: 8 }, family: { avatarId: 0 }
+  } })
+  const result = await service.getInvitationDetail(request)
+  assert.equal(result.inviterAvatarId, 8)
+  assert.equal(result.inviterAvatarUrl, 'signed-avatar')
+  assert.deepEqual(calls.attachments, [[8]])
+  const query = calls.queries.find((call) => call.name === 'member' && call.query.where.userId === 3).query
+  assert.ok(query.attributes.includes('userAvatarId'))
+})
+
+test('邀请人无头像、附件缺失或链接为空时返回空头像地址', async () => {
+  for (const userAvatarId of [undefined, null, 0, 8]) {
+    for (const attachments of [[], [{ url: '' }]]) {
+      const { service, calls } = fixture({
+        records: { inviterMember: { userAvatarId }, family: { avatarId: 0 } }, attachments
+      })
+      const result = await service.getInvitationDetail(request)
+      assert.equal(result.inviterAvatarId, userAvatarId || 0)
+      assert.equal(result.inviterAvatarUrl, '')
+      assert.deepEqual(calls.attachments, userAvatarId ? [[8]] : [])
+    }
+  }
 })
 
 test('非法用户 ID 或凭证在访问数据库前拒绝，包括直接传入哈希', async () => {

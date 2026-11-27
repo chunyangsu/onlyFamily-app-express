@@ -240,12 +240,14 @@ const familyService = {
     const codeHash = hashInvitationCode(invitationCode)
     const currentUserId = Number(userId)
     const user = await userList.findOne({
-      where: { id: currentUserId, status: 'normal' }, attributes: ['id']
+      where: { id: currentUserId, status: 'normal' },
+      attributes: ['id']
     })
     if (!user) reject('用户不存在或已停用')
 
     const invitation = await familyInvitation.findOne({
-      where: { codeHash }, attributes: ['familyId', 'inviterId', 'status', 'expiresTime']
+      where: { codeHash },
+      attributes: ['familyId', 'inviterId', 'status', 'expiresTime']
     })
     if (!invitation) reject('邀请不存在或无效', 404)
     if (invitation.status === 'used') reject('邀请已被使用', 409)
@@ -263,29 +265,36 @@ const familyService = {
     })
     if (!family) reject('家庭不存在或不可用')
     const inviter = await userList.findOne({
-      where: { id: invitation.inviterId, status: 'normal' }, attributes: ['id']
+      where: { id: invitation.inviterId, status: 'normal' },
+      attributes: ['id']
     })
     if (!inviter) reject('邀请人不存在或已停用')
     const inviterMember = await familyUserMap.findOne({
       where: { familyId: invitation.familyId, userId: invitation.inviterId },
-      attributes: ['nickname', 'role']
+      attributes: ['nickname', 'role', 'userAvatarId']
     })
     if (!inviterMember || !['admin', 'member'].includes(inviterMember.role)) reject('邀请人已无邀请权限')
     const member = await familyUserMap.findOne({
-      where: { familyId: invitation.familyId, userId: currentUserId }, attributes: ['id']
+      where: { familyId: invitation.familyId, userId: currentUserId },
+      attributes: ['id']
     })
 
     const resBody = {
       inviterId: invitation.inviterId, // 邀请人用户id
+      inviterAvatarId: inviterMember.userAvatarId || 0, // 邀请用户头像id
+      inviterAvatarUrl: '', // 邀请用户头像url
       inviterNickname: inviterMember.nickname || '', // 邀请人在该家庭中的昵称
       familyId: family.id, // 家庭id
       familyName: family.name, // 家庭名称
       familyAvatarId: family.avatarId || 0, // 家庭头像id
       familyAvatarUrl: '', // 家庭头像url地址
-      familyAvatarExpiresTime: null, // 家庭头像url地址过期时间
       status: invitation.status, // 邀请码状态
       expiresTime, // 邀请码过期时间
       isMember: Boolean(member) // 已加入时前端可展示“进入家庭”，不重复加入
+    }
+    if (Number(inviterMember.userAvatarId) > 0) {
+      const [avatar] = await getAttachmentList([inviterMember.userAvatarId])
+      resBody.inviterAvatarUrl = avatar?.url || ''
     }
     if (Number(family.avatarId) > 0) {
       const [avatar] = await getAttachmentList([family.avatarId])
@@ -341,11 +350,13 @@ const familyService = {
       if (invitation.status !== 'used') checkExpiration()
       const family = await familyList.findOne({
         where: { id: invitation.familyId, status: 'normal', deleteTime: 0 },
-        attributes: ['id', 'name', 'avatarId'], ...options
+        attributes: ['id', 'name', 'avatarId'],
+        ...options
       })
       if (!family) reject('家庭不存在或不可用')
       const member = await familyUserMap.findOne({
-        where: { familyId: invitation.familyId, userId: currentUserId }, ...options
+        where: { familyId: invitation.familyId, userId: currentUserId },
+        ...options
       })
 
       let role = member?.role || 'member'
@@ -354,24 +365,30 @@ const familyService = {
         if (!member) reject('邀请已被使用，请获取新的邀请', 409)
       } else {
         const inviter = await userList.findOne({
-          where: { id: invitation.inviterId, status: 'normal' }, attributes: ['id'], ...options
+          where: { id: invitation.inviterId, status: 'normal' },
+          attributes: ['id'],
+          ...options
         })
         if (!inviter) reject('邀请人不存在或已停用')
         const inviterMember = await familyUserMap.findOne({
-          where: { familyId: invitation.familyId, userId: invitation.inviterId }, ...options
+          where: { familyId: invitation.familyId, userId: invitation.inviterId },
+          ...options
         })
         if (!inviterMember || !['admin', 'member'].includes(inviterMember.role)) reject('邀请人已无邀请权限')
         // 等待家庭/成员行锁期间也可能到期，必须在写入前重新检查。
         checkExpiration()
         if (!member) {
           role = 'member' // 不接受客户端指定角色，也不继承邀请人的角色。
-          await familyUserMap.create({
-            familyId: invitation.familyId,
-            userId: currentUserId,
-            nickname: `用户_${currentUserId}`,
-            userAvatarId: 0,
-            role
-          }, { transaction })
+          await familyUserMap.create(
+            {
+              familyId: invitation.familyId,
+              userId: currentUserId,
+              nickname: `用户_${currentUserId}`,
+              userAvatarId: 0,
+              role
+            },
+            { transaction }
+          )
           checkExpiration()
           await invitation.update({ status: 'used', joinerId: currentUserId, joinTime: Date.now() }, { transaction })
         }
@@ -394,10 +411,9 @@ const familyService = {
         break
       } catch (error) {
         const databaseCode = error.original?.code || error.parent?.code
-        const memberConflict = error.name === 'SequelizeUniqueConstraintError' && (
-          ['familyId', 'userId'].some((field) => Object.hasOwn(error.fields || {}, field)) ||
-          /uk_family_user_map_family_user/.test(error.original?.sqlMessage || error.parent?.sqlMessage || '')
-        )
+        const memberConflict =
+          error.name === 'SequelizeUniqueConstraintError' &&
+          (['familyId', 'userId'].some((field) => Object.hasOwn(error.fields || {}, field)) || /uk_family_user_map_family_user/.test(error.original?.sqlMessage || error.parent?.sqlMessage || ''))
         // 托管事务已回滚后再重试，不能在失败事务中继续查询或消费邀请。
         if (attempt === 2 || (!memberConflict && !['ER_LOCK_DEADLOCK', 'ER_LOCK_WAIT_TIMEOUT'].includes(databaseCode))) throw error
       }
@@ -409,7 +425,7 @@ const familyService = {
         result.avatarUrl = avatar?.url || ''
         result.expiresTime = avatar?.url ? (avatar.expiresTime ?? null) : null
       } catch {
-        // 成员关系和邀请消费已提交；前端可通过家庭详情接口重新获取头像地址。
+        // 成员关系和邀请消费已提交；前端可通过家庭详情接口重新获取头像地址
       }
     }
     return result
