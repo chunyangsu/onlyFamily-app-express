@@ -58,6 +58,7 @@ const familyService = {
     }
 
     const data = familyInfo.toJSON()
+    const memberNum = await familyUserMap.count({ where: { familyId: data.id } })
     const resBody = {
       id: data.id,
       name: data.name,
@@ -65,6 +66,7 @@ const familyService = {
       avatarId: data.avatarId,
       avatarUrl: '',
       expiresTime: null,
+      memberNum,
       createId: data.createId,
       createTime: data.createTime
     }
@@ -317,7 +319,7 @@ const familyService = {
    * 成员联合唯一索引兜底；死锁、锁等待超时及成员唯一冲突最多重试整个事务两次
    * 任一步数据库操作失败均回滚，提交成功后才返回，不在持锁期间请求 OSS
    * 头像签名为提交后的尽力读取，失败返回空地址，避免已加入却报告加入失败
-   * @returns {Promise<Object>} 家庭资料、实际角色及 alreadyMember；expiresTime 为头像链接到期时间
+   * @returns {Promise<Object>} 家庭资料、成员数量 memberNum、实际角色及 alreadyMember；expiresTime 为头像链接到期时间
    */
   joinFamily: async (data) => {
     const { userId, invitationCode } = data || {}
@@ -393,12 +395,14 @@ const familyService = {
           await invitation.update({ status: 'used', joinerId: currentUserId, joinTime: Date.now() }, { transaction })
         }
       }
+      const memberNum = await familyUserMap.count({ where: { familyId: family.id }, transaction })
       return {
         id: family.id,
         name: family.name,
         avatarId: family.avatarId || 0,
         avatarUrl: '',
         expiresTime: null,
+        memberNum,
         role,
         alreadyMember: Boolean(member)
       }

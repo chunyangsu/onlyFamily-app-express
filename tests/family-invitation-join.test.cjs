@@ -13,7 +13,7 @@ const clone = (value) => JSON.parse(JSON.stringify(value))
 
 function fixture(options = {}) {
   let clock = now
-  const calls = { queries: [], creates: [], updates: [], events: [], signatures: [], transactions: 0 }
+  const calls = { queries: [], counts: [], creates: [], updates: [], events: [], signatures: [], transactions: 0 }
   const state = {
     users: [{ id: 1, status: 'normal' }, { id: 3, status: 'normal' }, { id: 4, status: 'normal' }],
     families: [{ id: 2, name: '我的家庭', avatarId: 7, status: 'normal', deleteTime: 0 }],
@@ -87,6 +87,12 @@ function fixture(options = {}) {
     familyInvitation: { findOne: findOne('invitations') },
     familyUserMap: {
       findOne: findOne('members'),
+      async count(config) {
+        checkTransaction(config)
+        calls.counts.push(clone(config.where))
+        if (options.countError) throw options.countError
+        return state.members.filter((item) => matches(item, config.where)).length
+      },
       async create(values, config) {
         checkTransaction(config)
         calls.creates.push(clone(values))
@@ -129,7 +135,7 @@ test('有效邀请在同一事务创建 member 并消费邀请，忽略客户端
   const { service, state, calls } = fixture()
   const result = await service.joinFamily({ ...request, userId: '1', familyId: 99, role: 'admin' })
   assert.deepEqual(clone(result), {
-    id: 2, name: '我的家庭', avatarId: 7, avatarUrl: 'signed', expiresTime: now + 43200000, role: 'member', alreadyMember: false
+    id: 2, name: '我的家庭', avatarId: 7, avatarUrl: 'signed', expiresTime: now + 43200000, memberNum: 2, role: 'member', alreadyMember: false
   })
   assert.deepEqual(calls.creates, [{ familyId: 2, userId: 1, nickname: '用户_1', userAvatarId: 0, role: 'member' }])
   assert.deepEqual(calls.updates, [{ status: 'used', joinerId: 1, joinTime: now }])
@@ -137,6 +143,7 @@ test('有效邀请在同一事务创建 member 并消费邀请，忽略客户端
   assert.deepEqual(calls.events, ['begin', 'commit'])
   assert.equal(calls.queries.find((item) => item.table === 'invitations').where.codeHash, invitationUtils.hashInvitationCode(code))
   assert.deepEqual(calls.signatures, [[7]])
+  assert.deepEqual(calls.counts, [{ familyId: 2 }])
   assert.ok(!JSON.stringify(result).includes(code))
 })
 
@@ -146,6 +153,7 @@ test('已是家庭成员不消费未使用邀请，不修改昵称、头像和�
   const result = await service.joinFamily(request)
   assert.equal(result.alreadyMember, true)
   assert.equal(result.role, 'admin')
+  assert.equal(result.memberNum, 2)
   assert.equal(state.invitations[0].status, 'unused')
   assert.equal(calls.creates.length, 0)
   assert.equal(calls.updates.length, 0)
@@ -160,6 +168,7 @@ test('本人重复提交幂等成功，即使邀请已过期或邀请人已退�
   state.members = state.members.filter((item) => item.userId !== 3)
   const result = await service.joinFamily(request)
   assert.equal(result.alreadyMember, true)
+  assert.equal(result.memberNum, 1)
   assert.equal(calls.creates.length, 1)
   assert.equal(calls.updates.length, 1)
   state.members = []
@@ -172,7 +181,7 @@ test('自己点击自己的邀请属于已是成员，不消费邀请；允许�
   assert.equal((await own.service.joinFamily({ ...request, userId: 3 })).alreadyMember, true)
   assert.equal(own.state.invitations[0].status, 'unused')
   const other = fixture({ prepare: (state) => state.members.push({ familyId: 99, userId: 1, role: 'admin' }) })
-  await other.service.joinFamily(request)
+  assert.equal((await other.service.joinFamily(request)).memberNum, 2)
   assert.equal(other.state.members.filter((item) => item.userId === 1).length, 2)
 })
 
@@ -231,7 +240,7 @@ test('用户、家庭、邀请人不可用或无邀请权限时拒绝，已有�
 test('成员创建、邀请更新、提交或查询失败全部回滚，邀请不被白白消耗', async () => {
   const error = new Error('database failed')
   for (const options of [
-    { createError: error }, { updateError: error }, { commitError: error },
+    { createError: error }, { updateError: error }, { commitError: error }, { countError: error },
     ...['users', 'invitations', 'families', 'members'].map((queryError) => ({ queryError, error }))
   ]) {
     const { service, state, calls } = fixture(options)
@@ -256,6 +265,7 @@ test('头像无绑定、缺失或签名异常均不影响已提交的加入结�
     const result = await service.joinFamily(request)
     assert.equal(result.avatarUrl, '')
     assert.equal(result.expiresTime, null)
+    assert.equal(result.memberNum, 2)
     assert.equal(state.invitations[0].status, 'used')
   }
 })
