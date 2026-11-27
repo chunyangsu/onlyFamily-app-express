@@ -57,17 +57,18 @@ const userService = {
       userInfo: {
         id: user.id,
         familyId: 0,
+        nickname: '',
         avatarId: 0,
         avatarUrl: '',
         expiresTime: null,
-        nickname: ''
+        role: ''
       }
     }
-    // 只有一个关联家庭时，自动使用该家庭下的成员资料。
-    // 只需区分 0、1、多个，最多查询两条即可。
+    // 只有一个关联家庭时，自动使用该家庭下的成员资料
+    // 只需区分 0、1、多个，最多查询两条即可
     const members = await familyUserMap.findAll({
       where: { userId: user.id },
-      attributes: ['familyId', 'nickname', 'userAvatarId'],
+      attributes: ['familyId', 'nickname', 'userAvatarId', 'role'],
       limit: 2,
       raw: true
     })
@@ -76,6 +77,7 @@ const userService = {
       resBody.userInfo.familyId = member.familyId
       resBody.userInfo.nickname = member.nickname || ''
       resBody.userInfo.avatarId = member.userAvatarId || 0
+      resBody.userInfo.role = member.role || ''
       if (resBody.userInfo.avatarId) {
         const [avatar] = await getAttachmentList([resBody.userInfo.avatarId])
         resBody.userInfo.avatarUrl = avatar?.url || ''

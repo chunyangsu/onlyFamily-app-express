@@ -46,7 +46,7 @@ function fixture({ members = [], avatarUrl = 'https://example.com/signed-avatar'
   return { service: module.exports, calls }
 }
 
-const member = { familyId: 6, nickname: '家庭内昵称', userAvatarId: 42 }
+const member = { familyId: 6, nickname: '家庭内昵称', userAvatarId: 42, role: 'member' }
 
 test('单家庭登录返回该家庭的成员昵称、头像 ID 和签名 URL', async () => {
   const { service, calls } = fixture({ members: [member] })
@@ -58,10 +58,12 @@ test('单家庭登录返回该家庭的成员昵称、头像 ID 和签名 URL', 
     avatarId: 42,
     avatarUrl: 'https://example.com/signed-avatar',
     expiresTime: 1795608000000,
-    nickname: '家庭内昵称'
+    nickname: '家庭内昵称',
+    role: 'member'
   })
   assert.equal(calls.memberships[0].where.userId, 8)
   assert.equal(calls.memberships[0].limit, 2)
+  assert.ok(calls.memberships[0].attributes.includes('role'))
   assert.deepEqual(calls.signatures, [[42]])
 })
 
@@ -69,8 +71,15 @@ test('无家庭、多家庭不自动选择，不读取任何头像', async () =>
   for (const members of [[], [member, { ...member, familyId: 7 }]]) {
     const { service, calls } = fixture({ members })
     const result = await service.login('code')
-    assert.deepEqual(JSON.parse(JSON.stringify(result.userInfo)), { id: 8, familyId: 0, avatarId: 0, avatarUrl: '', expiresTime: null, nickname: '' })
+    assert.deepEqual(JSON.parse(JSON.stringify(result.userInfo)), { id: 8, familyId: 0, avatarId: 0, avatarUrl: '', expiresTime: null, nickname: '', role: '' })
     assert.equal(calls.signatures.length, 0)
+  }
+})
+
+test('单家庭返回实际角色，角色缺失时返回空字符串', async () => {
+  for (const role of ['admin', 'member', undefined, null, '']) {
+    const { service } = fixture({ members: [{ ...member, role }] })
+    assert.equal((await service.login('code')).userInfo.role, role || '')
   }
 })
 
@@ -82,6 +91,7 @@ test('单家庭未设置头像时返回昵称和空 URL，不调用签名方法'
   assert.equal(result.userInfo.avatarId, 0)
   assert.equal(result.userInfo.avatarUrl, '')
   assert.equal(result.userInfo.expiresTime, null)
+  assert.equal(result.userInfo.role, 'member')
   assert.equal(calls.signatures.length, 0)
 })
 
@@ -99,6 +109,7 @@ test('新用户仍正常注册登录，未关联家庭返回默认资料', async
   assert.equal(calls.creates[0].openid, 'openid')
   assert.equal(result.token, 'token-8')
   assert.equal(result.userInfo.familyId, 0)
+  assert.equal(result.userInfo.role, '')
 })
 
 test('签名服务异常正常向上传递，不返回伪造的头像地址', async () => {
