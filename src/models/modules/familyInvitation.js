@@ -71,8 +71,6 @@ const familyInvitation = sequelize.define(
     tableName: 'family_invitation',
     engine: 'InnoDB', // 接受邀请时需要事务和行锁
     timestamps: false,
-    createdAt: 'createTime', // 将 createdAt 映射到 createTime 字段
-    updatedAt: 'updateTime', // 将 updatedAt 映射到 updateTime 字段
     indexes: [
       { name: 'uk_family_invitation_code_hash', unique: true, fields: ['codeHash'] },
       { name: 'idx_family_invitation_family_inviter_status', fields: ['familyId', 'inviterId', 'status'] }

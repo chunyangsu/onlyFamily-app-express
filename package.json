@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development nodemon src/app.js",
     "start": "cross-env NODE_ENV=production node src/app.js",
-    "db:init:prod": "NODE_ENV=production node src/scripts/initDatabase.js"
+    "db:init:prod": "NODE_ENV=production node src/scripts/initDatabase.js",
+    "db:migrate:dev": "node src/scripts/migrate.js",
+    "db:migrate:prod": "cross-env NODE_ENV=production node src/scripts/migrate.js"
   },
   "_moduleAliases": {
     "@": "./src"
@@ -26,7 +28,8 @@
     "mysql2": "^3.22.5",
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
-    "sequelize": "^6.37.8"
+    "sequelize": "^6.37.8",
+    "umzug": "^3.8.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
