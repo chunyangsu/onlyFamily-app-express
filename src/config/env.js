@@ -65,6 +65,13 @@ const env = {
     readUrlTtl: Number(process.env.OSS_READ_URL_TTL),
     uploadMaxSize: Number(process.env.OSS_UPLOAD_MAX_SIZE),
     uploadPolicyTtl: Number(process.env.OSS_UPLOAD_POLICY_TTL)
+  },
+  // Redis配置
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: Number(process.env.REDIS_PORT || 6379),
+    password: process.env.REDIS_PASSWORD || undefined,
+    database: Number(process.env.REDIS_DB || 0)
   }
 }
 
